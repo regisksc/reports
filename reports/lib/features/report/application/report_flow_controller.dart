@@ -212,7 +212,7 @@ class ReportFlowController extends ChangeNotifier {
         if (!_disposed) {
           _update(() {
             sending = false;
-            serviceRequestNumber = serviceRequestNumber;
+            this.serviceRequestNumber = serviceRequestNumber;
             failure = null;
           });
           if (retained) {
