@@ -1,0 +1,96 @@
+{
+  "scope": "Anonymous Illegal Dumping Item Pickup only",
+  "observedConfig": {
+    "capturedUTC": "2026-10-22T07:21:57.218691+00:00",
+    "values": {
+      "sCaseType": "Illegal Dumping Item Pickup",
+      "sImageCount": 5,
+      "sImageFormats": ".heic;.heif;.jpeg;.jpg;.pdf;.png;.webp",
+      "sUploadRequired": false,
+      "sDisplayUpload": true
+    },
+    "rawSource": ".scratch/illegal-dump-reporter/evidence/ticket12/fetchCaseTypeDetails.response.json",
+    "sha256": "ae54400c4a90b7f30ca8294922903a91ec4ff56fdc2ed51c12eb13fb5c87a9c4",
+    "provenance": "Fresh read-only City response; no dispatch"
+  },
+  "portalSource": {
+    "file": ".scratch/illegal-dump-reporter/evidence/preflight/bundle-reportissue.unescaped.js (original workspace)",
+    "sha256": "6058a3e1af3d1d5cd46594a6455e9b6d112da58cd33bd8a8b92553d590c8e472",
+    "excerpts": [
+      {
+        "topic": "all_attachment_mapping",
+        "characterOffset": 239872,
+        "excerpt": "sFileLinks:JSON.stringify(e.uploadedFileData.map(e=>({...e,fileData:e.fileData.split(\"base64,\")[1]}))),isSNC:e.isSNC};if(e.isSNC){const s=d.lstCaseQuestion?.find(e=>e.sFieldto"
+      },
+      {
+        "topic": "source_limits",
+        "characterOffset": 258323,
+        "excerpt": "this.maxPdfAllowed=1,this.imgMaxSize=1e7,this.pdfMaxSize=3e6,this.allowPdf=!1,this.recognitionAllowe"
+      },
+      {
+        "topic": "input_name_validation",
+        "characterOffset": 262003,
+        "excerpt": "t.filter(e=>e.name.length>60).length>0)return this.error=this.labels.LA311_ImageFileNameSizeError,void(this.loading=!1);this.readF"
+      },
+      {
+        "topic": "array_order",
+        "characterOffset": 262158,
+        "excerpt": "readFileUploads(e){const i=[];for(let t=0;t<e.length;t++)i.push(new Promise((i,a)=>{this.readFile(e,t,i,a)}));Promise.all(i).then(e=>{this._uploadedFileData=[...this.uploadedFileData,...e],this.dispatchEvent(new CustomEvent(\"fileupload\",{bubbles:!0,composed:!0,detail:{uploadedFileData:this.uploadedFileData}})),this.loading=!1}).catch(e=>{this.error=e,this.loading=!1})}prepareLatLong(e){const i=e.exifdata.GPSLatitude[0].nu"
+      },
+      {
+        "topic": "image_scaling",
+        "characterOffset": 263010,
+        "excerpt": "prepareImageDetails(e,i){const t=600;let a=e.width,l=e.height,s=0;return parseInt(i.size,10)>5e5?a>l&&a>t?(s=t/a,l*=s,a*=s):l>t&&(s=t/l,a*=s,l*=s):(a=e.width,l=e.height),[a,l]}readFile(e,i,t,a){var l=this;const s=e[i];if(this.heicInitialized&&this.heicHelper?.isHeicOrHeif(s))return void V(function*("
+      },
+      {
+        "topic": "image_encoding",
+        "characterOffset": 264436,
+        "excerpt": "o.fileData=l.toDataURL(\"image/jpeg\",.5),o.fileName=B(`${c}.${g}`),o.showImage=!0,o.showPdf=!1,o.fileType=g,t(o)}catch(e){}},n.src=URL.createObjectURL("
+      },
+      {
+        "topic": "filename_cap",
+        "characterOffset": 257559,
+        "excerpt": "B=(e,i=60)=>{if(!e||e.length<=i)return e;const t=e.lastIndexOf(\".\");if(t<=0||t===e.length-1)return e.substring(0,i);const a=e.substring(t),l=i-a.length;return l<=0?e.substring(0,i):e.substring(0,l)+a};class J extends(o.NavigationMixin(i.LightningElement)){cons"
+      },
+      {
+        "topic": "size_validation",
+        "characterOffset": 264610,
+        "excerpt": "isFileValid(e){this.error=\"\";let i=e.name.split(\".\");return i=i[i.length-1].toLowerCase(),this.acceptedImageFormats.includes(i)?parseInt(e.size,10)>this.imgMaxSize?(this.error=this.labels.LA311_FileTooLargeError,!1):!(parseInt(e.size,10)>this.pdfMaxSize&&\"pdf\"===i)||(this.error=this.labels.LA311_PdfTooLargeError,!1):(this.error=this.labels.LA311_FileTypesAllowedError,!1)}}i.registerDecorators(J,{publicProps:{label:{config:0},required:{config:0},fieldLevelHelp:{config:0},imageCount:{config:0},caseType:{config:0},isP"
+      }
+    ]
+  },
+  "readExamples": [
+    {
+      "method": "fetchInitialDetails",
+      "provenance": "Observed HTTP 200 on 2026-10-22, minimized and sanitized for collection example",
+      "rawSource": ".scratch/illegal-dump-reporter/evidence/ticket12/fetchInitialDetails.response.json",
+      "sha256": "49fa23aa0ee8ca415fd747900f73e3e96b503ab988fa442c591f566e4115dada"
+    },
+    {
+      "method": "fetchCaseTypeDetails",
+      "provenance": "Observed HTTP 200 on 2026-10-22, minimized and sanitized for collection example",
+      "rawSource": ".scratch/illegal-dump-reporter/evidence/ticket12/fetchCaseTypeDetails.response.json",
+      "sha256": "ae54400c4a90b7f30ca8294922903a91ec4ff56fdc2ed51c12eb13fb5c87a9c4"
+    },
+    {
+      "method": "validateAddress",
+      "provenance": "Observed HTTP 200 on 2026-10-22, minimized and sanitized for collection example",
+      "rawSource": ".scratch/illegal-dump-reporter/evidence/ticket12/validateAddress.response.json",
+      "sha256": "49a82949c1e69c4d54a44321854f145cc9e69c801e1c5c07979b39c09bc6b3f0"
+    },
+    {
+      "method": "getRelatedCaseLst",
+      "provenance": "Observed HTTP 200 on 2026-10-22, minimized and sanitized for collection example",
+      "rawSource": ".scratch/illegal-dump-reporter/evidence/ticket12/getRelatedCaseLst.response.json",
+      "sha256": "b5066e184a144ae21695001c614575b4c0fe61563250a944c7d00ee6b1837f40"
+    }
+  ],
+  "unverified": [
+    "End-to-end three-photo City acceptance",
+    "Aggregate encoded Aura request size limit",
+    "Original successful transaction envelope",
+    "Original native-send provenance",
+    "Current authoritative readback of C-04955177"
+  ],
+  "dispatchCount": 0
+}

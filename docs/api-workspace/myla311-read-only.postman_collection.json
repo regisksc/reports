@@ -1,0 +1,420 @@
+{
+  "info": {
+    "name": "MyLA311 anonymous illegal dumping, reads only",
+    "description": "Ticket12. No submitCase, create, upload or other dispatch request exists in this collection. A run performs five City reads. Examples are explicitly observed/minimized or synthetic. Missing original successful transaction and native-send provenance remain unresolved. See README.md and ../portal-api.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "latitude",
+      "value": "34.054047",
+      "type": "string"
+    },
+    {
+      "key": "longitude",
+      "value": "-118.24317",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1 Bootstrap guest context",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "text/html"
+          }
+        ],
+        "url": "https://myla311.lacity.gov/s/",
+        "description": "GET /s/ mints framework context, no login. Example is synthetic percent-encoded HTML with replacement values, not raw City HTML."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code !== 200) throw new Error(`HTTP ${pm.response.code}`);",
+              "const html = pm.response.text().replace(/(?:%[0-9A-Fa-f]{2})+/g, (value) => decodeURIComponent(value));",
+              "const fwuid = html.match(/\"fwuid\":\"([^\"]+)\"/);",
+              "const appId = html.match(/\"loaded\":\\{\"APPLICATION@markup:\\/\\/siteforce:communityApp\":\"([^\"]+)\"/);",
+              "if (!fwuid || !appId) throw new Error('Missing Aura context');",
+              "pm.collectionVariables.set('auraContext', JSON.stringify({mode:'PROD', fwuid:fwuid[1], app:'siteforce:communityApp', loaded:{'APPLICATION@markup://siteforce:communityApp':appId[1]}, dn:[], globals:{}, uad:true}));",
+              "pm.collectionVariables.set('requestCount', 0);"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "SYNTHETIC bootstrap extraction fixture",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "text/html"
+            }
+          ],
+          "body": "%7B%22fwuid%22%3A%22SYNTHETIC_FWUID%22%2C%22loaded%22%3A%7B%22APPLICATION%40markup%3A%2F%2Fsiteforce%3AcommunityApp%22%3A%22SYNTHETIC_APP_ID%22%7D%7D"
+        }
+      ]
+    },
+    {
+      "name": "2 Discover illegal dumping type",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded; charset=UTF-8"
+          }
+        ],
+        "url": "https://myla311.lacity.gov/s/sfsites/aura?r={{readCounter}}&aura.ApexAction.execute=1",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "message",
+              "value": "{{readMessage}}",
+              "type": "text"
+            },
+            {
+              "key": "aura.context",
+              "value": "{{readContext}}",
+              "type": "text"
+            },
+            {
+              "key": "aura.pageURI",
+              "value": "/s/",
+              "type": "text"
+            },
+            {
+              "key": "aura.token",
+              "value": "null",
+              "type": "text"
+            }
+          ]
+        },
+        "description": "Read only: X11_H_ParentController.fetchInitialDetails. Example observed 2026-10-22, minimized from private fetchInitialDetails.response.json; encrypted config ID replaced, unrelated metadata/contact/session fields omitted. Full live values are stored in generated collection variables; clear them before exporting or sharing a run."
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const params = {};",
+              "const action = {id:'1;a', descriptor:'aura://ApexActionController/ACTION$execute', callingDescriptor:'UNKNOWN', params:{namespace:'', classname:'X11_H_ParentController', method:'fetchInitialDetails', params, cacheable:true, isContinuation:false}};",
+              "pm.variables.set('readMessage', JSON.stringify({actions:[action]}));",
+              "const counter = Number(pm.collectionVariables.get('requestCount')) + 1;",
+              "pm.collectionVariables.set('requestCount', counter);",
+              "pm.variables.set('readCounter', counter);",
+              "pm.variables.set('readContext', pm.collectionVariables.get('auraContext'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code !== 200) throw new Error(`HTTP ${pm.response.code}`);",
+              "const reply = pm.response.json();",
+              "const action = (reply.actions || [])[0];",
+              "if (reply.exceptionEvent || !action || action.state !== 'SUCCESS') throw new Error('Aura action did not succeed');",
+              "const envelope = JSON.parse(action.returnValue.returnValue);",
+              "if (envelope.isSuccess !== true) throw new Error('Portal read did not succeed');",
+              "const payload = typeof envelope.response === 'string' ? JSON.parse(envelope.response) : envelope.response;",
+              "const types = [...(payload.popularCaseList || []), ...(payload.caseConfigurationList || []).flatMap((group) => group.caseConfigurations || [])];",
+              "const type = types.find((entry) => entry.uxType === 'Illegal Dumping Item Pickup');",
+              "if (!type || !type.caseConfigId) throw new Error('Illegal dumping configuration missing');",
+              "pm.collectionVariables.set('caseTypeId', decodeURIComponent(type.caseConfigId));"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "OBSERVED 2026-10-22, minimized and sanitized",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"actions\": [\n    {\n      \"id\": \"1;a\",\n      \"state\": \"SUCCESS\",\n      \"returnValue\": {\n        \"returnValue\": \"{\\\"isSuccess\\\": true, \\\"message\\\": \\\"Success\\\", \\\"response\\\": {\\\"popularCaseList\\\": [{\\\"uxType\\\": \\\"Illegal Dumping Item Pickup\\\", \\\"caseConfigId\\\": \\\"SANITIZED_CASE_CONFIG_ID\\\"}], \\\"caseConfigurationList\\\": []}}\",\n        \"cacheable\": true\n      },\n      \"error\": []\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "3 Fetch questions and attachment configuration",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded; charset=UTF-8"
+          }
+        ],
+        "url": "https://myla311.lacity.gov/s/sfsites/aura?r={{readCounter}}&aura.ApexAction.execute=1",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "message",
+              "value": "{{readMessage}}",
+              "type": "text"
+            },
+            {
+              "key": "aura.context",
+              "value": "{{readContext}}",
+              "type": "text"
+            },
+            {
+              "key": "aura.pageURI",
+              "value": "/s/",
+              "type": "text"
+            },
+            {
+              "key": "aura.token",
+              "value": "null",
+              "type": "text"
+            }
+          ]
+        },
+        "description": "Read only: X11_RI_ParentController.fetchCaseTypeDetails. Example observed 2026-10-22, minimized from private fetchCaseTypeDetails.response.json; encrypted config ID replaced, unrelated metadata/contact/session fields omitted. Full live values are stored in generated collection variables; clear them before exporting or sharing a run."
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const params = {caseTypeId:pm.collectionVariables.get('caseTypeId'), parentWorkOrderId:'', isSNC:false};",
+              "const action = {id:'1;a', descriptor:'aura://ApexActionController/ACTION$execute', callingDescriptor:'UNKNOWN', params:{namespace:'', classname:'X11_RI_ParentController', method:'fetchCaseTypeDetails', params, cacheable:false, isContinuation:false}};",
+              "pm.variables.set('readMessage', JSON.stringify({actions:[action]}));",
+              "const counter = Number(pm.collectionVariables.get('requestCount')) + 1;",
+              "pm.collectionVariables.set('requestCount', counter);",
+              "pm.variables.set('readCounter', counter);",
+              "pm.variables.set('readContext', pm.collectionVariables.get('auraContext'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code !== 200) throw new Error(`HTTP ${pm.response.code}`);",
+              "const reply = pm.response.json();",
+              "const action = (reply.actions || [])[0];",
+              "if (reply.exceptionEvent || !action || action.state !== 'SUCCESS') throw new Error('Aura action did not succeed');",
+              "const envelope = JSON.parse(action.returnValue.returnValue);",
+              "if (envelope.isSuccess !== true) throw new Error('Portal read did not succeed');",
+              "const payload = typeof envelope.response === 'string' ? JSON.parse(envelope.response) : envelope.response;",
+              "pm.collectionVariables.set('caseConfig', JSON.stringify(payload.objCaseConfigWrapper));",
+              "pm.collectionVariables.set('anonymousContact', JSON.stringify({...payload.contactWrapperResponse, isAnonymously:true}));"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "OBSERVED 2026-10-22, minimized and sanitized",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"actions\": [\n    {\n      \"id\": \"1;a\",\n      \"state\": \"SUCCESS\",\n      \"returnValue\": {\n        \"returnValue\": \"{\\\"isSuccess\\\": true, \\\"message\\\": \\\"Success\\\", \\\"response\\\": {\\\"objCaseConfigWrapper\\\": {\\\"sCaseType\\\": \\\"Illegal Dumping Item Pickup\\\", \\\"sImageCount\\\": 5, \\\"sImageFormats\\\": \\\".heic;.heif;.jpeg;.jpg;.pdf;.png;.webp\\\", \\\"sUploadRequired\\\": false, \\\"sDisplayUpload\\\": true, \\\"sCasePriority\\\": \\\"Normal\\\", \\\"sCaseDefaultStatus\\\": \\\"New\\\", \\\"lstCaseQuestion\\\": [{\\\"sFieldtoUpdate\\\": \\\"Provide_Information_On_Suspect__c\\\", \\\"sQuestion\\\": \\\"Will you be able to provide information on the Illegal Dumping suspect?\\\", \\\"sAnswer\\\": \\\"\\\", \\\"sDisplay\\\": true, \\\"iOrder\\\": 4}, {\\\"sFieldtoUpdate\\\": \\\"Illegally_Dumped_Item_Type__c\\\", \\\"sQuestion\\\": \\\"Do you know the type of the illegally dumped item(s)?\\\", \\\"sAnswer\\\": \\\"\\\", \\\"sDisplay\\\": false, \\\"iOrder\\\": 14}, {\\\"sFieldtoUpdate\\\": \\\"Illegally_Dumped_Pickup_Options__c\\\", \\\"sQuestion\\\": \\\"Select the type of Illegal Dumping Pickup to be picked up\\\", \\\"sAnswer\\\": \\\"\\\", \\\"sDisplay\\\": false, \\\"iOrder\\\": 168}, {\\\"sFieldtoUpdate\\\": \\\"Location_of_Loose_Miscellaneous_Debris__c\\\", \\\"sQuestion\\\": \\\"Select Location of Loose/Miscellaneous Debris\\\", \\\"sAnswer\\\": \\\"\\\", \\\"sDisplay\\\": false, \\\"iOrder\\\": 187}, {\\\"sFieldtoUpdate\\\": \\\"No_of_Loose_Miscellaneous_Debris__c\\\", \\\"sQuestion\\\": \\\"Number of Loose/Miscellaneous Debris\\\", \\\"sAnswer\\\": \\\"\\\", \\\"sDisplay\\\": false, \\\"iOrder\\\": 188}, {\\\"sFieldtoUpdate\\\": \\\"Description\\\", \\\"sQuestion\\\": \\\"Additional Comments\\\", \\\"sAnswer\\\": \\\"\\\", \\\"sDisplay\\\": true, \\\"iOrder\\\": 209}]}, \\\"contactWrapperResponse\\\": {\\\"isAnonymously\\\": null, \\\"bIsLogin\\\": false, \\\"sEmail\\\": null, \\\"sPhone\\\": null}}}\",\n        \"cacheable\": false\n      },\n      \"error\": []\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "4 Validate public City Hall coordinates",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded; charset=UTF-8"
+          }
+        ],
+        "url": "https://myla311.lacity.gov/s/sfsites/aura?r={{readCounter}}&aura.ApexAction.execute=1",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "message",
+              "value": "{{readMessage}}",
+              "type": "text"
+            },
+            {
+              "key": "aura.context",
+              "value": "{{readContext}}",
+              "type": "text"
+            },
+            {
+              "key": "aura.pageURI",
+              "value": "/s/",
+              "type": "text"
+            },
+            {
+              "key": "aura.token",
+              "value": "null",
+              "type": "text"
+            }
+          ]
+        },
+        "description": "Read only: LA_AddressController.validateAddress. Example observed 2026-10-22, minimized from private validateAddress.response.json; encrypted config ID replaced, unrelated metadata/contact/session fields omitted. Full live values are stored in generated collection variables; clear them before exporting or sharing a run."
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const latitude = Number(pm.variables.get('latitude'));",
+              "const longitude = Number(pm.variables.get('longitude'));",
+              "if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) throw new Error('Use finite coordinates');",
+              "const params = {latitude, longitude, addressType:'City Boundary', filterCriteria:''};",
+              "const action = {id:'1;a', descriptor:'aura://ApexActionController/ACTION$execute', callingDescriptor:'UNKNOWN', params:{namespace:'', classname:'LA_AddressController', method:'validateAddress', params, cacheable:false, isContinuation:false}};",
+              "pm.variables.set('readMessage', JSON.stringify({actions:[action]}));",
+              "const counter = Number(pm.collectionVariables.get('requestCount')) + 1;",
+              "pm.collectionVariables.set('requestCount', counter);",
+              "pm.variables.set('readCounter', counter);",
+              "pm.variables.set('readContext', pm.collectionVariables.get('auraContext'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code !== 200) throw new Error(`HTTP ${pm.response.code}`);",
+              "const reply = pm.response.json();",
+              "const action = (reply.actions || [])[0];",
+              "if (reply.exceptionEvent || !action || action.state !== 'SUCCESS') throw new Error('Aura action did not succeed');",
+              "const envelope = JSON.parse(action.returnValue.returnValue);",
+              "if (envelope.isSuccess !== true) throw new Error('Portal read did not succeed');",
+              "const payload = typeof envelope.response === 'string' ? JSON.parse(envelope.response) : envelope.response;",
+              "pm.collectionVariables.set('locationResult', JSON.stringify(payload));",
+              "pm.collectionVariables.set('locatorStatus', envelope.message);"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "OBSERVED 2026-10-22, minimized and sanitized",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"actions\": [\n    {\n      \"id\": \"1;a\",\n      \"state\": \"SUCCESS\",\n      \"returnValue\": {\n        \"returnValue\": \"{\\\"isSuccess\\\": true, \\\"message\\\": \\\"Locator Success\\\", \\\"response\\\": \\\"{\\\\\\\"address\\\\\\\": {\\\\\\\"ShortLabel\\\\\\\": \\\\\\\"200 N SPRING ST\\\\\\\", \\\\\\\"LongLabel\\\\\\\": \\\\\\\"200 N SPRING ST, LOS ANGELES, CA, 90012\\\\\\\", \\\\\\\"City\\\\\\\": \\\\\\\"LOS ANGELES\\\\\\\", \\\\\\\"Postal\\\\\\\": \\\\\\\"90012\\\\\\\", \\\\\\\"X\\\\\\\": -118.24317, \\\\\\\"Y\\\\\\\": 34.054047, \\\\\\\"Addr_type\\\\\\\": \\\\\\\"PointAddress\\\\\\\"}, \\\\\\\"location\\\\\\\": {\\\\\\\"x\\\\\\\": -118.24317, \\\\\\\"y\\\\\\\": 34.054047, \\\\\\\"z\\\\\\\": 0.0, \\\\\\\"spatialReference\\\\\\\": {\\\\\\\"wkid\\\\\\\": 4326, \\\\\\\"latestWkid\\\\\\\": 4326, \\\\\\\"vcsWkid\\\\\\\": 115700, \\\\\\\"latestVcsWkid\\\\\\\": 115700}}}\\\"}\",\n        \"cacheable\": false\n      },\n      \"error\": []\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "5 Check nearby duplicates",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded; charset=UTF-8"
+          }
+        ],
+        "url": "https://myla311.lacity.gov/s/sfsites/aura?r={{readCounter}}&aura.ApexAction.execute=1",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "message",
+              "value": "{{readMessage}}",
+              "type": "text"
+            },
+            {
+              "key": "aura.context",
+              "value": "{{readContext}}",
+              "type": "text"
+            },
+            {
+              "key": "aura.pageURI",
+              "value": "/s/",
+              "type": "text"
+            },
+            {
+              "key": "aura.token",
+              "value": "null",
+              "type": "text"
+            }
+          ]
+        },
+        "description": "Read only: X11_RI_ParentController.getRelatedCaseLst. Example observed 2026-10-22, minimized from private getRelatedCaseLst.response.json; encrypted config ID replaced, unrelated metadata/contact/session fields omitted. Full live values are stored in generated collection variables; clear them before exporting or sharing a run."
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const latitude = Number(pm.variables.get('latitude'));",
+              "const longitude = Number(pm.variables.get('longitude'));",
+              "if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) throw new Error('Use finite coordinates');",
+              "const params = {caseType:'Illegal Dumping Item Pickup', caseLatitude:latitude, caseLongitude:longitude};",
+              "const action = {id:'1;a', descriptor:'aura://ApexActionController/ACTION$execute', callingDescriptor:'UNKNOWN', params:{namespace:'', classname:'X11_RI_ParentController', method:'getRelatedCaseLst', params, cacheable:false, isContinuation:false}};",
+              "pm.variables.set('readMessage', JSON.stringify({actions:[action]}));",
+              "const counter = Number(pm.collectionVariables.get('requestCount')) + 1;",
+              "pm.collectionVariables.set('requestCount', counter);",
+              "pm.variables.set('readCounter', counter);",
+              "pm.variables.set('readContext', pm.collectionVariables.get('auraContext'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code !== 200) throw new Error(`HTTP ${pm.response.code}`);",
+              "const reply = pm.response.json();",
+              "const action = (reply.actions || [])[0];",
+              "if (reply.exceptionEvent || !action || action.state !== 'SUCCESS') throw new Error('Aura action did not succeed');",
+              "const envelope = JSON.parse(action.returnValue.returnValue);",
+              "if (envelope.isSuccess !== true && !(envelope.isSuccess === false && envelope.response === null && envelope.message === 'No Data Available')) throw new Error('Portal duplicate read did not succeed');",
+              "pm.collectionVariables.set('duplicateEnvelope', JSON.stringify(envelope));"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "OBSERVED 2026-10-22, minimized and sanitized",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"actions\": [\n    {\n      \"id\": \"1;a\",\n      \"state\": \"SUCCESS\",\n      \"returnValue\": {\n        \"returnValue\": \"{\\\"isSuccess\\\": false, \\\"message\\\": \\\"No Data Available\\\", \\\"response\\\": null}\",\n        \"cacheable\": false\n      },\n      \"error\": []\n    }\n  ]\n}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,2 +1,10 @@
-.scratch/
+.scratch/*
+!.scratch/illegal-dump-reporter/
+.scratch/illegal-dump-reporter/*
+!.scratch/illegal-dump-reporter/spec.md
+!.scratch/illegal-dump-reporter/client-interface.md
+!.scratch/illegal-dump-reporter/orchestrator-prompt.md
+!.scratch/illegal-dump-reporter/issues/
+.scratch/illegal-dump-reporter/issues/*
+!.scratch/illegal-dump-reporter/issues/*.md
 .DS_Store

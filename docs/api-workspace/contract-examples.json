@@ -1,0 +1,98 @@
+{
+  "executable": false,
+  "notice": "NOT A POSTMAN COLLECTION. Inert contract notes only. Never send these synthetic values. JSON-text parameters are decoded here for readability; encode sObjContact, sCaseQuestionJSON, sFileLinks and addressDetails as JSON strings in the actual Aura action.",
+  "dispatch": {
+    "provenance": {
+      "kind": "source-derived, synthetic values",
+      "source": "c/laCaseCreationFlow.submitRequest in preserved Portal bundle",
+      "observedSuccessfulTransaction": false
+    },
+    "apexAction": "X11_RI_ParentController.submitCase",
+    "params": {
+      "sObjCase": {
+        "Type": "Illegal Dumping Item Pickup",
+        "Origin": "Self Service",
+        "Session_Tracking_ID__c": "SYNTHETIC_UUID",
+        "Street_Address__c": "PUBLIC_LOCATION_EXAMPLE"
+      },
+      "sObjContact": {
+        "isAnonymously": true,
+        "bIsLogin": false
+      },
+      "sCaseQuestionJSON": {
+        "lstCaseQuestion": [
+          {
+            "sFieldtoUpdate": "Description",
+            "sAnswer": "SYNTHETIC, DO NOT SEND",
+            "sDisplay": true,
+            "iOrder": 1
+          }
+        ]
+      },
+      "sFileLinks": [
+        {
+          "fileData": "SYNTHETIC_BASE64_NOT_IMAGE_DATA",
+          "fileName": "photo-1.jpg",
+          "showImage": true,
+          "showPdf": false,
+          "fileType": "jpg",
+          "position": null
+        },
+        {
+          "fileData": "SYNTHETIC_BASE64_NOT_IMAGE_DATA",
+          "fileName": "photo-2.jpg",
+          "showImage": true,
+          "showPdf": false,
+          "fileType": "jpg",
+          "position": null
+        },
+        {
+          "fileData": "SYNTHETIC_BASE64_NOT_IMAGE_DATA",
+          "fileName": "photo-3.jpg",
+          "showImage": true,
+          "showPdf": false,
+          "fileType": "jpg",
+          "position": null
+        }
+      ],
+      "isSNC": false,
+      "addressDetails": {
+        "LongLabel": "PUBLIC_LOCATION_EXAMPLE"
+      }
+    }
+  },
+  "result": {
+    "provenance": {
+      "kind": "source-derived, synthetic values",
+      "source": "Portal checks isSuccess and response.sCaseNumber; not a raw City receipt"
+    },
+    "envelope": {
+      "isSuccess": true,
+      "response": {
+        "sCaseNumber": "SYNTHETIC_SR",
+        "sCaseId": "SYNTHETIC_ID",
+        "sAppointmentDates": "[]"
+      },
+      "message": "SYNTHETIC_SUCCESS"
+    }
+  },
+  "rejection": {
+    "provenance": {
+      "kind": "synthetic policy example",
+      "source": "production client rejection rule, not observed City traffic"
+    },
+    "envelope": {
+      "isSuccess": false,
+      "response": null,
+      "message": "SYNTHETIC_REJECTION"
+    }
+  },
+  "uncertain": {
+    "provenance": {
+      "kind": "synthetic policy example",
+      "source": "production client uncertain-attempt policy"
+    },
+    "event": "Connection ends after dispatch before authoritative receipt",
+    "meaning": "Acceptance unknown; retain attempt marker and verify existing request before any resend."
+  }
+}
