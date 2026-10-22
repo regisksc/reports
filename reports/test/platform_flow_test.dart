@@ -1,3 +1,4 @@
+import 'package:reports/main.dart' as entry;
 import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:reports/features/report/domain/submission_contract.dart';
 import 'dart:async';
@@ -14,7 +15,6 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 import 'package:reports/app/report_app.dart' as app;
 import 'package:reports/features/report/data/portal_submission_client.dart';
 import 'package:reports/features/report/domain/report.dart';
-import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
@@ -1310,7 +1310,7 @@ void main() {
   testWidgets('the native entry point opens the illegal dumping home', (
     tester,
   ) async {
-    app.main();
+    entry.main();
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('reports-brand-logo')), findsOneWidget);

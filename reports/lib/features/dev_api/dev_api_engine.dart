@@ -61,11 +61,12 @@ abstract class _DevApiState {
 class DevApiEngine extends _DevApiState
     with _DevApiReadSession, _DevApiSubmissionService {
   DevApiEngine({
-    http.Client? client,
-    Duration timeout = const Duration(seconds: 60),
-    required ReportStore store,
-  }) : super(client: client, timeout: timeout, store: store);
+    super.client,
+    super.timeout = const Duration(seconds: 60),
+    required super.store,
+  });
 
+  @override
   void _stop(DevApiException error) {
     final active = _active;
     if (active == null) return;
@@ -77,6 +78,7 @@ class DevApiEngine extends _DevApiState
     active.completeError(error);
   }
 
+  @override
   void cancel() {
     _stop(
       const DevApiException(

@@ -1,6 +1,5 @@
 import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:reports/features/home/presentation/report_delivery_painter.dart';
-import 'package:reports/features/report/domain/submission_contract.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,7 +16,6 @@ import 'package:reports/features/report/data/portal_submission_client.dart';
 import 'package:reports/features/report/domain/report.dart';
 import 'package:reports/features/home/presentation/report_delivery_scene.dart';
 import 'package:reports/design/reports_design.dart';
-import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const testStore = LocalReportStore();

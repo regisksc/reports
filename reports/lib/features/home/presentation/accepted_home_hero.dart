@@ -1,7 +1,5 @@
-import 'dart:math' as math;
-import 'dart:ui' show lerpDouble;
-
 import 'package:flutter/material.dart';
+import 'report_delivery_painter.dart';
 
 import 'package:reports/design/reports_design.dart';
 
@@ -37,15 +35,15 @@ class AcceptedHomeHero extends StatelessWidget {
             seconds: 5.8,
             heroBounds: Offset.zero & constraints.biggest,
           ),
-          child: _AcceptedHeroControls(onStartReport: onStartReport),
+          child: AcceptedHeroControls(onStartReport: onStartReport),
         ),
       ),
     ),
   );
 }
 
-class _AcceptedHeroControls extends StatelessWidget {
-  const _AcceptedHeroControls({this.onStartReport});
+class AcceptedHeroControls extends StatelessWidget {
+  const AcceptedHeroControls({super.key, this.onStartReport});
 
   final VoidCallback? onStartReport;
 

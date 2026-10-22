@@ -1,5 +1,4 @@
 import 'package:reports/features/report/data/local_report_store.dart';
-import 'package:reports/features/report/domain/submission_contract.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
@@ -15,7 +14,6 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 import 'package:reports/features/report/presentation/report_flow_page.dart';
 import 'package:reports/features/report/presentation/location_map.dart';
 import 'package:reports/features/report/data/portal_submission_client.dart';
-import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';

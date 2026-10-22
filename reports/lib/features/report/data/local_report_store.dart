@@ -14,6 +14,7 @@ class LocalReportStore implements ReportStore {
   static const _key = 'reports_v2';
   static const _draftKey = 'report_draft_v1';
 
+  @override
   Future<ReportDraft?> loadDraft() async {
     final preferences = await SharedPreferences.getInstance();
     await preferences.reload();
@@ -30,6 +31,7 @@ class LocalReportStore implements ReportStore {
         : draft;
   }
 
+  @override
   Future<void> saveDraft(ReportDraft draft) async {
     final preferences = await SharedPreferences.getInstance();
     if (!await preferences.setString(_draftKey, jsonEncode(draft.toJson()))) {
@@ -45,6 +47,7 @@ class LocalReportStore implements ReportStore {
     }
   }
 
+  @override
   Future<List<Report>> loadReports() async {
     final preferences = await SharedPreferences.getInstance();
     final rows = preferences.getStringList(_key) ?? [];
@@ -107,6 +110,7 @@ class LocalReportStore implements ReportStore {
         .toList();
   }
 
+  @override
   Future<void> saveReport(Report report) async {
     if (report.state == ReportState.submissionUncertain) {
       await _recordAttempt(report);
@@ -119,6 +123,7 @@ class LocalReportStore implements ReportStore {
     }
   }
 
+  @override
   Future<void> replaceReport(Report before, Report after) async {
     if (after.state == ReportState.submissionUncertain) {
       await _recordAttempt(after);
@@ -148,6 +153,7 @@ class LocalReportStore implements ReportStore {
     }
   }
 
+  @override
   Future<void> discardDraft(DateTime createdAt) async {
     final preferences = await SharedPreferences.getInstance();
     await preferences.reload();
@@ -174,6 +180,7 @@ class LocalReportStore implements ReportStore {
     }
   }
 
+  @override
   Future<void> removeLocalReceipt(Report receipt) async {
     final preferences = await SharedPreferences.getInstance();
     await preferences.reload();

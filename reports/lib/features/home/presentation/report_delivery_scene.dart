@@ -1,11 +1,7 @@
-import 'dart:math' as math;
-import 'dart:ui' show lerpDouble;
-
 import 'package:flutter/material.dart';
 
-import 'package:reports/design/reports_design.dart';
-
 import 'report_delivery_painter.dart';
+import 'accepted_home_hero.dart';
 
 class ReportDeliveryScene extends StatefulWidget {
   const ReportDeliveryScene({
@@ -83,7 +79,7 @@ class _ReportDeliverySceneState extends State<ReportDeliveryScene>
     label: 'Your accepted report is arriving at town hall.',
     child: AnimatedBuilder(
       animation: _controller,
-      child: const _AcceptedHeroControls(),
+      child: const AcceptedHeroControls(),
       builder: (context, child) => LayoutBuilder(
         builder: (context, constraints) {
           final seconds = _controller.value * 5.8;

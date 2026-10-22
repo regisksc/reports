@@ -1,3 +1,4 @@
+import '../domain/submission_contract.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';

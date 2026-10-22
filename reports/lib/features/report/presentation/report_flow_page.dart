@@ -10,7 +10,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:reports/features/report/domain/report.dart';
 import '../application/report_store.dart';
 import '../application/report_flow_controller.dart';
-import 'package:reports/features/report/data/portal_submission_client.dart';
 import 'package:reports/design/reports_design.dart';
 import 'package:reports/features/report/presentation/report_presentation.dart';
 import 'package:reports/features/report/presentation/location_map.dart';

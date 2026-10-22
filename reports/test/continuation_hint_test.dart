@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:reports/features/report/presentation/report_flow_page.dart';
-import 'package:reports/features/report/data/portal_submission_client.dart';
 import 'package:reports/features/report/domain/report.dart';
 import 'package:reports/design/reports_design.dart';
 import 'package:shared_preferences/shared_preferences.dart';

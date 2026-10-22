@@ -6,9 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:reports/app/report_app.dart';
-import 'package:reports/features/report/data/portal_submission_client.dart';
+import 'package:reports/features/home/presentation/accepted_home_hero.dart';
 import 'package:reports/features/report/domain/report.dart';
-import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const testStore = LocalReportStore();
@@ -19,6 +18,11 @@ Finder _homeResumeContinueButton() => find.descendant(
 );
 
 void main() {
+  test('extracted accepted hero controls preserve their widget key', () {
+    const key = ValueKey('accepted-hero-controls');
+    expect(const AcceptedHeroControls(key: key).key, key);
+  });
+
   testWidgets(
     'a resident moves through a retained report with purposeful or stationary motion',
     (tester) async {
