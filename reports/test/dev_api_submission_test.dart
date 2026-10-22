@@ -93,7 +93,7 @@ void main() {
   );
 
   test(
-    'an existing uncertain attempt cannot be bypassed by a new inspector report',
+    'an existing uncertain attempt blocks its own inspector report',
     () async {
       final support = await _storage();
       final uncertain = _report(state: ReportState.submissionUncertain);
@@ -112,7 +112,7 @@ void main() {
       );
       addTearDown(engine.dispose);
       await expectLater(
-        engine.prepareSubmission(_report(createdAt: DateTime(2026, 10, 23))),
+        engine.prepareSubmission(_report()),
         throwsA(
           isA<DevApiException>().having(
             (error) => error.kind,
@@ -124,6 +124,64 @@ void main() {
       expect(calls, 0);
       expect(marker.readAsBytesSync(), markerBefore);
       expect(preferences.getStringList('reports_v2'), rows);
+    },
+  );
+
+  test(
+    'a fresh inspector report submits without changing an older uncertain attempt',
+    () async {
+      final support = await _storage();
+      final uncertain = _report(state: ReportState.submissionUncertain);
+      await testStore.saveReport(uncertain);
+      final marker = File('${support.path}/submission-attempt.json');
+      final markerBefore = marker.readAsBytesSync();
+      final calls = <http.Request>[];
+      final engine = DevApiEngine(
+        store: testStore,
+        client: MockClient((request) async {
+          calls.add(request);
+          return _reply(request);
+        }),
+      );
+      addTearDown(engine.dispose);
+      final fresh = _report(createdAt: DateTime(2026, 10, 23));
+      await _reads(engine, fresh);
+      final plan = await engine.prepareSubmission(fresh);
+      final callsBeforeConfirmation = calls.length;
+      final result = await engine.confirmSubmission(
+        plan,
+        confirmed: true,
+        currentReport: fresh,
+      );
+      final retained = await testStore.loadReports();
+      expect(
+        {
+          'callsBeforeConfirmation': callsBeforeConfirmation,
+          'submissions': calls
+              .where((call) => _method(call) == 'submitCase')
+              .length,
+          'result': result,
+          'oldReport': retained
+              .singleWhere((row) => row.createdAt == uncertain.createdAt)
+              .toJson(),
+          'oldMarker': marker.readAsBytesSync(),
+          'newReport': retained
+              .singleWhere((row) => row.createdAt == fresh.createdAt)
+              .toJson(),
+        },
+        {
+          'callsBeforeConfirmation': 4,
+          'submissions': 1,
+          'result': isA<SubmissionAccepted>().having(
+            (accepted) => accepted.serviceRequestNumber,
+            'number',
+            'SYNTHETIC-SR',
+          ),
+          'oldReport': uncertain.toJson(),
+          'oldMarker': markerBefore,
+          'newReport': fresh.submittedWith('SYNTHETIC-SR').toJson(),
+        },
+      );
     },
   );
 

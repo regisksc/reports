@@ -67,9 +67,9 @@ mixin _DevApiSubmissionService on _DevApiState {
         report.serviceRequestNumber != null ||
         saved.any(
           (row) =>
-              row.state == ReportState.failed ||
-              row.state == ReportState.submissionUncertain ||
-              (row.createdAt == report.createdAt &&
+              row.createdAt == report.createdAt &&
+              (row.state == ReportState.failed ||
+                  row.state == ReportState.submissionUncertain ||
                   row.state == ReportState.submitted),
         )) {
       throw const DevApiException(
