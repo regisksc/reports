@@ -10,7 +10,6 @@ import 'package:reports/features/report/presentation/history_page.dart';
 import 'package:reports/features/report/domain/report.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 const testStore = LocalReportStore();
 
 const _shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
@@ -63,7 +62,9 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        MaterialApp(home: ReportDetailPage(store: testStore,report: confirmed)),
+        MaterialApp(
+          home: ReportDetailPage(store: testStore, report: confirmed),
+        ),
       );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Copy number'));
@@ -138,7 +139,9 @@ void main() {
     final outcomes = <String, Object?>{};
 
     await tester.pumpWidget(
-      MaterialApp(home: ReportDetailPage(store: testStore,report: confirmed)),
+      MaterialApp(
+        home: ReportDetailPage(store: testStore, report: confirmed),
+      ),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Copy number'));
@@ -188,7 +191,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             key: ValueKey(index),
-            home: ReportDetailPage(store: testStore,report: records[index]),
+            home: ReportDetailPage(store: testStore, report: records[index]),
           ),
         );
         await tester.pumpAndSettle();

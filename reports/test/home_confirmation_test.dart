@@ -16,7 +16,6 @@ import 'package:reports/features/report/domain/report.dart';
 import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 const testStore = LocalReportStore();
 
 Finder _homeResumeContinueButton() => find.descendant(
@@ -122,7 +121,9 @@ void main() {
             .byKey(const Key('home-confirmation-card'))
             .evaluate()
             .length;
-        final before = (await tester.runAsync(testStore.loadReports))!.single.toJson();
+        final before = (await tester.runAsync(
+          testStore.loadReports,
+        ))!.single.toJson();
         await tester.ensureVisible(find.text('Copy'));
         await tester.tap(find.text('Copy'));
         observed['copied'] = copied;

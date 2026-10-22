@@ -13,7 +13,12 @@ import 'package:reports/features/report/presentation/report_flow_page.dart';
 import 'package:reports/features/report/data/portal_submission_client.dart';
 
 class ReportDetailPage extends StatelessWidget {
-  const ReportDetailPage({super.key, required this.report, this.client, required this.store});
+  const ReportDetailPage({
+    super.key,
+    required this.report,
+    this.client,
+    required this.store,
+  });
 
   final Report report;
   final ReportStore store;
@@ -39,7 +44,8 @@ class ReportDetailPage extends StatelessWidget {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ReportFlowPage(store: store,
+          builder: (_) => ReportFlowPage(
+            store: store,
             client: client ?? PortalSubmissionClient(),
             draft: draft,
           ),

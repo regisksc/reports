@@ -68,7 +68,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     late final MaterialPageRoute<Report> route;
     route = MaterialPageRoute<Report>(
-      builder: (_) => ReportFlowPage(store: widget.store,
+      builder: (_) => ReportFlowPage(
+        store: widget.store,
         client: widget.client,
         draft: draft,
         onAccepted: (report) =>
@@ -138,7 +139,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Align(
                             alignment: Alignment.centerRight,
-                            child: devApiPill(context, store: widget.store,
+                            child: devApiPill(
+                              context,
+                              store: widget.store,
                               key: const Key('home-dev-api-pill'),
                             ),
                           ),
@@ -321,7 +324,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               onViewReceipt: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => ReportDetailPage(store: widget.store,
+                                  builder: (_) => ReportDetailPage(
+                                    store: widget.store,
                                     report: _confirmationReport!,
                                   ),
                                 ),
@@ -343,8 +347,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                     onTap: () => Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) =>
-                                            HistoryPage(store: widget.store,client: widget.client),
+                                        builder: (_) => HistoryPage(
+                                          store: widget.store,
+                                          client: widget.client,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -358,8 +364,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     onTap: () => Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) =>
-                                            _InformationPage(store: widget.store),
+                                        builder: (_) => _InformationPage(
+                                          store: widget.store,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -465,4 +472,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

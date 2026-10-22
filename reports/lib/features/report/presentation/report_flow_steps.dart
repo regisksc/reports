@@ -73,7 +73,10 @@ extension _ReportFlowSteps on _ReportFlowPageState {
           enabled: !_locked && !_locating,
           onSelected: (point) {
             _update(
-              () => _position = (latitude: point.latitude, longitude: point.longitude),
+              () => _position = (
+                latitude: point.latitude,
+                longitude: point.longitude,
+              ),
             );
             _persistDraft();
           },

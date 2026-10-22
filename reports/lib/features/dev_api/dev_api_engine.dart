@@ -14,18 +14,21 @@ part 'dev_api_submission_service.dart';
 
 const _origin = 'https://myla311.lacity.gov';
 const _auraPath = '/s/sfsites/aura';
-const _contentType =
-      'application/x-www-form-urlencoded; charset=UTF-8';
+const _contentType = 'application/x-www-form-urlencoded; charset=UTF-8';
 const _classes = {
-    'fetchInitialDetails': 'X11_H_ParentController',
-    'fetchCaseTypeDetails': 'X11_RI_ParentController',
-    'validateAddress': 'LA_AddressController',
-    'getRelatedCaseLst': 'X11_RI_ParentController',
-  };
+  'fetchInitialDetails': 'X11_H_ParentController',
+  'fetchCaseTypeDetails': 'X11_RI_ParentController',
+  'validateAddress': 'LA_AddressController',
+  'getRelatedCaseLst': 'X11_RI_ParentController',
+};
 
 abstract class _DevApiState {
-  _DevApiState({http.Client? client, required this.timeout, required this.store})
-      : _client = client ?? http.Client(), _ownsClient = client == null;
+  _DevApiState({
+    http.Client? client,
+    required this.timeout,
+    required this.store,
+  }) : _client = client ?? http.Client(),
+       _ownsClient = client == null;
   final ReportStore store;
   final http.Client _client;
   final bool _ownsClient;
@@ -55,9 +58,13 @@ abstract class _DevApiState {
   void _stop(DevApiException error);
 }
 
-class DevApiEngine extends _DevApiState with _DevApiReadSession, _DevApiSubmissionService {
-  DevApiEngine({http.Client? client, Duration timeout = const Duration(seconds: 60), required ReportStore store})
-      : super(client: client, timeout: timeout, store: store);
+class DevApiEngine extends _DevApiState
+    with _DevApiReadSession, _DevApiSubmissionService {
+  DevApiEngine({
+    http.Client? client,
+    Duration timeout = const Duration(seconds: 60),
+    required ReportStore store,
+  }) : super(client: client, timeout: timeout, store: store);
 
   void _stop(DevApiException error) {
     final active = _active;

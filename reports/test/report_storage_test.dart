@@ -9,7 +9,6 @@ import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
-
 const testStore = LocalReportStore();
 
 void main() {
@@ -50,28 +49,30 @@ void main() {
         ),
       );
       final outcomes = <String, Object?>{};
-      outcomes['discard'] = await testStore.discardDraft(attempt.createdAt).then(
-        (_) => 'removed',
-        onError: (Object error) => error is StateError
-            ? 'StateError'
-            : error is FileSystemException
-            ? 'FileSystemException'
-            : throw error,
-      );
-      outcomes['receipt'] = await testStore.removeLocalReceipt(attempt).then(
-        (_) => 'removed',
-        onError: (Object error) => error is StateError
-            ? 'StateError'
-            : error is FileSystemException
-            ? 'FileSystemException'
-            : throw error,
-      );
+      outcomes['discard'] = await testStore
+          .discardDraft(attempt.createdAt)
+          .then(
+            (_) => 'removed',
+            onError: (Object error) => error is StateError
+                ? 'StateError'
+                : error is FileSystemException
+                ? 'FileSystemException'
+                : throw error,
+          );
+      outcomes['receipt'] = await testStore
+          .removeLocalReceipt(attempt)
+          .then(
+            (_) => 'removed',
+            onError: (Object error) => error is StateError
+                ? 'StateError'
+                : error is FileSystemException
+                ? 'FileSystemException'
+                : throw error,
+          );
       PathProviderPlatform.instance = _UnavailableSupportPath();
-      outcomes['cleanup'] =
-          await testStore.replaceReport(
-            attempt,
-            attempt.submittedWith('SR-SYNTHETIC-REMOVE'),
-          ).then(
+      outcomes['cleanup'] = await testStore
+          .replaceReport(attempt, attempt.submittedWith('SR-SYNTHETIC-REMOVE'))
+          .then(
             (_) => 'saved',
             onError: (Object error) => error is StateError
                 ? 'StateError'
@@ -80,21 +81,25 @@ void main() {
                 : throw error,
           );
       PathProviderPlatform.instance = _SupportPath(supportDirectory.path);
-      await testStore.removeLocalReceipt((await testStore.loadReports()).single);
+      await testStore.removeLocalReceipt(
+        (await testStore.loadReports()).single,
+      );
       outcomes['marker'] = File(
         '${supportDirectory.path}/submission-attempt.json',
       ).existsSync();
       outcomes['reports'] = (await testStore.loadReports())
           .map((report) => report.toJson())
           .toList();
-      outcomes['resend'] = await testStore.saveReport(attempt).then(
-        (_) => 'saved',
-        onError: (Object error) => error is StateError
-            ? 'StateError'
-            : error is FileSystemException
-            ? 'FileSystemException'
-            : throw error,
-      );
+      outcomes['resend'] = await testStore
+          .saveReport(attempt)
+          .then(
+            (_) => 'saved',
+            onError: (Object error) => error is StateError
+                ? 'StateError'
+                : error is FileSystemException
+                ? 'FileSystemException'
+                : throw error,
+          );
       expect(outcomes, {
         'discard': 'StateError',
         'receipt': 'StateError',
@@ -246,7 +251,10 @@ void main() {
       await file.writeAsString(marker, flush: true);
       SharedPreferences.setMockInitialValues({});
 
-      await expectLater(testStore.loadReports(), throwsA(isA<FormatException>()));
+      await expectLater(
+        testStore.loadReports(),
+        throwsA(isA<FormatException>()),
+      );
     });
   }
 
@@ -308,8 +316,9 @@ void main() {
       await testStore.saveReport(attempt);
       SharedPreferencesStorePlatform.instance = _FailingStore();
 
-      final outcome =
-          await testStore.replaceReport(attempt, attempt.submittedWith('SR-9')).then(
+      final outcome = await testStore
+          .replaceReport(attempt, attempt.submittedWith('SR-9'))
+          .then(
             (_) => 'saved',
             onError: (Object error) =>
                 error is StateError ? 'failed' : throw error,

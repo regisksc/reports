@@ -28,4 +28,3 @@ Future<HomeResume?> loadHomeResume(ReportStore store) async {
   }
   return draft == null ? null : HomeResume.draft(draft);
 }
-

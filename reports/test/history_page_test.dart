@@ -10,7 +10,6 @@ import 'package:reports/features/report/domain/report.dart';
 import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 const testStore = LocalReportStore();
 
 void main() {
@@ -36,7 +35,9 @@ void main() {
   ) async {
     PathProviderPlatform.instance = _SupportPath(null);
 
-    await tester.pumpWidget(const MaterialApp(home: HistoryPage(store: testStore,)));
+    await tester.pumpWidget(
+      const MaterialApp(home: HistoryPage(store: testStore)),
+    );
     await tester.pump();
 
     expect(find.text('Cannot load reports.'), findsOneWidget);
@@ -315,7 +316,11 @@ Future<void> _saveReport(WidgetTester tester, Report report) async {
 
 Future<void> _openHistory(WidgetTester tester) async {
   await tester.runAsync(() async {
-    await tester.pumpWidget(MaterialApp(home: HistoryPage(store: testStore,key: UniqueKey())));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HistoryPage(store: testStore, key: UniqueKey()),
+      ),
+    );
     for (
       var turn = 0;
       turn < 1000 &&

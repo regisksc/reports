@@ -15,7 +15,6 @@ import 'package:reports/design/reports_design.dart';
 import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 const testStore = LocalReportStore();
 
 void main() {
@@ -531,7 +530,8 @@ Future<void> _open(
       home: Scaffold(
         body: Builder(
           builder: (context) => TextButton(
-            onPressed: () => showDevApiSheet(context, store: testStore, httpClient: client),
+            onPressed: () =>
+                showDevApiSheet(context, store: testStore, httpClient: client),
             child: const Text('Open workspace'),
           ),
         ),

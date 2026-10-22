@@ -47,7 +47,12 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
   @override
   void initState() {
     super.initState();
-    _controller = ReportFlowController(store: widget.store, client: widget.client, draft: widget.draft, onAccepted: widget.onAccepted);
+    _controller = ReportFlowController(
+      store: widget.store,
+      client: widget.client,
+      draft: widget.draft,
+      onAccepted: widget.onAccepted,
+    );
     _desc.text = _controller.description;
     _qty.text = _controller.quantityText;
     _desc.addListener(_syncInputs);
@@ -55,13 +60,16 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
     _controller.addListener(_onChanged);
     _controller.checkSavedAttempts();
   }
+
   void _syncInputs() {
     _controller.description = _desc.text;
     _controller.quantityText = _qty.text;
   }
+
   void _onChanged() {
     if (mounted) setState(() {});
   }
+
   void _update(VoidCallback update) => setState(update);
 
   @override
@@ -76,7 +84,8 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
 
   List<String> get _photoPaths => _controller.photoPaths;
   ({double latitude, double longitude})? get _position => _controller.position;
-  set _position(({double latitude, double longitude})? value) => _controller.position = value;
+  set _position(({double latitude, double longitude})? value) =>
+      _controller.position = value;
   String? get _debris => _controller.debris;
   set _debris(String? value) => _controller.debris = value;
   bool get _sending => _controller.sending;
@@ -101,6 +110,7 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
     if (_scroll.hasClients) _scroll.jumpTo(0);
     _controller.changeStep(step, fromReview: fromReview);
   }
+
   Future<void> _persistDraft() => _controller.persistDraft();
   Future<void> _submit() => _controller.submit();
 
@@ -166,7 +176,9 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
       }
       final pos = await Geolocator.getCurrentPosition();
       if (mounted) {
-        setState(() => _position = (latitude: pos.latitude, longitude: pos.longitude));
+        setState(
+          () => _position = (latitude: pos.latitude, longitude: pos.longitude),
+        );
         await _persistDraft();
       }
     } finally {
@@ -406,5 +418,4 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
       ),
     );
   }
-
 }

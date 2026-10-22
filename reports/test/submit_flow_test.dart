@@ -14,7 +14,6 @@ import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
-
 const testStore = LocalReportStore();
 
 const _locationChannel = MethodChannel('flutter.baseflow.com/geolocator');

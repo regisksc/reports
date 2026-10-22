@@ -319,4 +319,3 @@ void _requireOk(http.Response response) {
     );
   }
 }
-

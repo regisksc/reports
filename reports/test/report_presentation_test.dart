@@ -11,7 +11,6 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 const testStore = LocalReportStore();
 
 void main() {
@@ -84,7 +83,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           key: ValueKey(index),
-          home: ReportDetailPage(store: testStore,report: reports[index]),
+          home: ReportDetailPage(store: testStore, report: reports[index]),
         ),
       );
       await tester.pumpAndSettle();
@@ -106,7 +105,9 @@ void main() {
       });
     }
     await tester.runAsync(() async {
-      await tester.pumpWidget(const MaterialApp(home: HistoryPage(store: testStore,)));
+      await tester.pumpWidget(
+        const MaterialApp(home: HistoryPage(store: testStore)),
+      );
       for (
         var turn = 0;
         turn < 1000 &&

@@ -20,7 +20,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
-
 const testStore = LocalReportStore();
 
 void main() {
@@ -205,7 +204,8 @@ void main() {
       final portal = _SyntheticPortal();
       await tester.pumpWidget(
         MaterialApp(
-          home: ReportFlowPage(store: testStore,
+          home: ReportFlowPage(
+            store: testStore,
             client: PortalSubmissionClient(httpClient: portal.client),
           ),
         ),
@@ -310,7 +310,8 @@ void main() {
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(
         MaterialApp(
-          home: ReportFlowPage(store: testStore,
+          home: ReportFlowPage(
+            store: testStore,
             client: PortalSubmissionClient(httpClient: portal.client),
             draft: retained,
           ),
@@ -383,7 +384,8 @@ void main() {
       final portal = _SyntheticPortal();
       await tester.pumpWidget(
         MaterialApp(
-          home: ReportFlowPage(store: testStore,
+          home: ReportFlowPage(
+            store: testStore,
             client: PortalSubmissionClient(httpClient: portal.client),
           ),
         ),

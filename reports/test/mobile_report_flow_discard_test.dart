@@ -13,7 +13,6 @@ import 'package:reports/design/reports_design.dart';
 import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 const testStore = LocalReportStore();
 
 void main() {
@@ -106,7 +105,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: ReportsStyle.theme,
-        home: ReportFlowPage(store: testStore,
+        home: ReportFlowPage(
+          store: testStore,
           client: _NoSubmissionClient(),
           draft: ReportDraft(
             createdAt: attempt.createdAt,

@@ -688,4 +688,3 @@ class ReportDeliveryPainter extends CustomPainter {
   bool shouldRepaint(ReportDeliveryPainter oldDelegate) =>
       oldDelegate.seconds != seconds || oldDelegate.heroBounds != heroBounds;
 }
-

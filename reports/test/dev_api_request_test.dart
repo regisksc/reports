@@ -7,13 +7,13 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:reports/features/dev_api/dev_api_engine.dart';
 
-
 const testStore = LocalReportStore();
 
 void main() {
   test('a City write action is blocked before any HTTP request', () async {
     var calls = 0;
-    final engine = DevApiEngine(store: testStore,
+    final engine = DevApiEngine(
+      store: testStore,
       client: MockClient((request) async {
         calls++;
         return http.Response('should never be dispatched', 200);
@@ -37,7 +37,8 @@ void main() {
     'mixed batches, unknown actions and query overrides never reach HTTP',
     () async {
       var calls = 0;
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async {
           calls++;
           return http.Response('', 200);
@@ -93,7 +94,8 @@ void main() {
     'previewing presets is inert and GET and HEAD omit editor bodies',
     () async {
       final requests = <http.Request>[];
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async {
           requests.add(request);
           expect(request.followRedirects, false);
@@ -138,7 +140,8 @@ void main() {
     'manual bootstrap and all Aura read presets use the captured contract',
     () async {
       final requests = <http.Request>[];
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async {
           requests.add(request);
           if (request.method == 'GET') {
@@ -215,7 +218,8 @@ void main() {
     'malformed remote context and JSON retain the actual response',
     () async {
       var reads = 0;
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async {
           if (request.method == 'GET') return http.Response('$_shell%FF', 200);
           reads++;
@@ -261,7 +265,8 @@ void main() {
     'invalid prerequisites, forms, argument values and headers stay local',
     () async {
       var calls = 0;
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async {
           calls++;
           return http.Response(_shell, 200);
@@ -327,7 +332,7 @@ void main() {
     'cancel aborts the transport, settles promptly and ignores a late response',
     () async {
       final client = _PendingClient();
-      final engine = DevApiEngine(store: testStore,client: client);
+      final engine = DevApiEngine(store: testStore, client: client);
       final result = engine.run(engine.preset(DevApiOperation.bootstrap));
       await expectLater(
         engine.run(engine.preset(DevApiOperation.bootstrap)),
@@ -359,7 +364,8 @@ void main() {
 
   test('timeout aborts without waiting for a late server result', () async {
     final client = _PendingClient();
-    final engine = DevApiEngine(store: testStore,
+    final engine = DevApiEngine(
+      store: testStore,
       client: client,
       timeout: const Duration(milliseconds: 5),
     );
@@ -376,7 +382,8 @@ void main() {
   test(
     'network errors differ from HTTP responses and owned clients dispose',
     () async {
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient(
           (request) async => throw http.ClientException('offline'),
         ),
@@ -386,7 +393,7 @@ void main() {
         _fails('network'),
       );
       engine.dispose();
-      DevApiEngine(store: testStore,).dispose();
+      DevApiEngine(store: testStore).dispose();
       final response = DevApiResponse(
         statusCode: 204,
         headers: {},

@@ -223,7 +223,8 @@ class _HistoryPageState extends State<HistoryPage> {
                       await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => ReportDetailPage(store: widget.store,
+                          builder: (_) => ReportDetailPage(
+                            store: widget.store,
                             report: r,
                             client: widget.client,
                           ),
@@ -245,4 +246,3 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 }
-

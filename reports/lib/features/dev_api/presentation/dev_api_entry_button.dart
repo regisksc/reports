@@ -3,7 +3,11 @@ import '../../../design/reports_design.dart';
 import '../../report/application/report_store.dart';
 import 'dev_api_page.dart';
 
-Widget devApiPill(BuildContext context, {required ReportStore store, Key? key}) => Container(
+Widget devApiPill(
+  BuildContext context, {
+  required ReportStore store,
+  Key? key,
+}) => Container(
   key: key,
   decoration: BoxDecoration(
     color: Colors.white,
@@ -25,4 +29,3 @@ Widget devApiPill(BuildContext context, {required ReportStore store, Key? key}) 
     child: const Text('Dev / API'),
   ),
 );
-

@@ -73,4 +73,3 @@ class _ReportAppState extends State<ReportApp> with WidgetsBindingObserver {
     );
   }
 }
-

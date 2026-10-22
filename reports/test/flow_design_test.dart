@@ -8,7 +8,6 @@ import 'package:reports/features/report/domain/report.dart';
 import 'package:reports/design/reports_design.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 const testStore = LocalReportStore();
 
 void main() {
@@ -19,7 +18,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: ReportsStyle.theme,
-          home: ReportFlowPage(store: testStore,client: _NoSubmissionClient()),
+          home: ReportFlowPage(store: testStore, client: _NoSubmissionClient()),
         ),
       );
       await tester.pump();
@@ -54,7 +53,10 @@ void main() {
         theme: ReportsStyle.theme,
         home: MediaQuery(
           data: const MediaQueryData(disableAnimations: true),
-          child: ReportFlowPage(store: testStore,client: _NoSubmissionClient()),
+          child: ReportFlowPage(
+            store: testStore,
+            client: _NoSubmissionClient(),
+          ),
         ),
       ),
     );

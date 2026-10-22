@@ -14,7 +14,6 @@ import 'package:reports/features/report/domain/report.dart';
 import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 const testStore = LocalReportStore();
 
 void main() {
@@ -29,7 +28,8 @@ void main() {
       final report = _report(paths: photos.map((file) => file.path).toList());
       final calls = <http.Request>[];
       DevApiSubmitPlan? reviewed;
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async {
           calls.add(request);
           if (_method(request) == 'submitCase') {
@@ -104,7 +104,8 @@ void main() {
       final preferences = await SharedPreferences.getInstance();
       final rows = preferences.getStringList('reports_v2');
       var calls = 0;
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async {
           calls++;
           return _reply(request);
@@ -132,7 +133,8 @@ void main() {
     () async {
       await _storage();
       var calls = 0;
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async {
           calls++;
           return _reply(request);
@@ -171,7 +173,8 @@ void main() {
     'bootstrap display and request previews never expose live session values',
     () async {
       await _storage();
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async => _reply(request)),
       );
       addTearDown(engine.dispose);
@@ -209,7 +212,8 @@ void main() {
       expect(response.formattedBody, contains('Denied'));
       expect(response.formattedBody, isNot(contains('private')));
       expect(response.formattedBody, isNot(contains('secret')));
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async => _reply(request)),
       );
       addTearDown(engine.dispose);
@@ -226,7 +230,8 @@ void main() {
       await _storage();
       final report = _report();
       await testStore.saveReport(report.submittedWith('EXISTING-SR'));
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async {
           if (_method(request) == 'submitCase') {
             return http.Response(
@@ -254,7 +259,10 @@ void main() {
         engine.prepareSubmission(report),
         throwsA(isA<DevApiException>()),
       );
-      await testStore.replaceReport((await testStore.loadReports()).single, report);
+      await testStore.replaceReport(
+        (await testStore.loadReports()).single,
+        report,
+      );
       await _reads(engine, report);
       final plan = await engine.prepareSubmission(report);
       final result = await engine.confirmSubmission(
@@ -278,7 +286,8 @@ void main() {
       final started = Completer<void>();
       final release = Completer<http.Response>();
       final report = _report();
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async {
           if (_method(request) == 'submitCase') {
             started.complete();
@@ -315,7 +324,8 @@ void main() {
     var submits = 0;
     final release = Completer<http.Response>();
     final report = _report();
-    final engine = DevApiEngine(store: testStore,
+    final engine = DevApiEngine(
+      store: testStore,
       timeout: const Duration(milliseconds: 30),
       client: MockClient((request) async {
         if (_method(request) == 'submitCase') {
@@ -339,7 +349,10 @@ void main() {
       SubmissionFailureKind.uncertain,
     );
     expect(submits, 1);
-    expect((await testStore.loadReports()).single.state, ReportState.submissionUncertain);
+    expect(
+      (await testStore.loadReports()).single.state,
+      ReportState.submissionUncertain,
+    );
     release.complete(http.Response('Unconfirmed', 500));
     await Future<void>.delayed(Duration.zero);
   });
@@ -404,7 +417,8 @@ void main() {
     'changing operation preserves validated locator but report edits clear it',
     () async {
       await _storage();
-      final engine = DevApiEngine(store: testStore,
+      final engine = DevApiEngine(
+        store: testStore,
         client: MockClient((request) async => _reply(request)),
       );
       addTearDown(engine.dispose);

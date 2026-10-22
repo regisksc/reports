@@ -127,4 +127,3 @@ class DevApiSubmitPlan {
     'actionParams': jsonDecode(_exact.actionParamsJson),
   });
 }
-

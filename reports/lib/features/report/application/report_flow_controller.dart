@@ -4,8 +4,12 @@ import '../domain/submission_contract.dart';
 import 'report_store.dart';
 
 class ReportFlowController extends ChangeNotifier {
-  ReportFlowController({required this.store, required this.client, ReportDraft? draft, this.onAccepted})
-      : draftCreatedAt = draft?.createdAt ?? DateTime.now() {
+  ReportFlowController({
+    required this.store,
+    required this.client,
+    ReportDraft? draft,
+    this.onAccepted,
+  }) : draftCreatedAt = draft?.createdAt ?? DateTime.now() {
     if (draft != null) {
       description = draft.description;
       quantityText = draft.quantity;
@@ -212,9 +216,7 @@ class ReportFlowController extends ChangeNotifier {
             failure = null;
           });
           if (retained) {
-            onAccepted?.call(
-              attempt.submittedWith(serviceRequestNumber),
-            );
+            onAccepted?.call(attempt.submittedWith(serviceRequestNumber));
           }
         }
       case SubmissionFailed(:final kind, :final message):
@@ -245,5 +247,4 @@ class ReportFlowController extends ChangeNotifier {
         }
     }
   }
-
 }

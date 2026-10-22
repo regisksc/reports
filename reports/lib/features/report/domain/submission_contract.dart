@@ -18,4 +18,3 @@ final class SubmissionFailed extends SubmissionResult {
 }
 
 enum SubmissionFailureKind { rejected, network, sessionExpired, uncertain }
-

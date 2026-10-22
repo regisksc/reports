@@ -85,4 +85,3 @@ Uint8List? _normalizePhoto(Uint8List bytes) {
     return null;
   }
 }
-

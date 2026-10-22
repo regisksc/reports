@@ -17,7 +17,6 @@ import 'package:reports/features/report/domain/report.dart';
 import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 const testStore = LocalReportStore();
 
 Finder _homeResumeContinueButton() => find.descendant(

@@ -13,7 +13,6 @@ import 'package:reports/features/report/domain/report.dart';
 import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 const testStore = LocalReportStore();
 
 void main() {
@@ -58,7 +57,7 @@ void main() {
       final client = _AcceptedClient();
       await tester.pumpWidget(
         MaterialApp(
-          home: ReportFlowPage(store: testStore,client: client, draft: draft),
+          home: ReportFlowPage(store: testStore, client: client, draft: draft),
         ),
       );
       await _until(
@@ -153,7 +152,11 @@ void main() {
               ).copyWith(disableAnimations: reduceMotion),
               child: child!,
             ),
-            home: ReportFlowPage(store: testStore,client: client, draft: draft),
+            home: ReportFlowPage(
+              store: testStore,
+              client: client,
+              draft: draft,
+            ),
           ),
         );
         await _until(

@@ -11,29 +11,30 @@ import 'package:reports/features/report/domain/report.dart';
 import 'package:reports/features/report/data/portal_submission_client.dart';
 import '../../report/application/report_store.dart';
 
-Future<void> showDevApiSheet(BuildContext context, {required ReportStore store, http.Client? httpClient}) =>
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.white,
-      clipBehavior: Clip.antiAlias,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
-          ? AnimationStyle.noAnimation
-          : null,
-      builder: (context) => FractionallySizedBox(
-        heightFactor: .94,
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(context).bottom,
-          ),
-          child: DevApiPage(store: store, httpClient: httpClient),
-        ),
-      ),
-    );
+Future<void> showDevApiSheet(
+  BuildContext context, {
+  required ReportStore store,
+  http.Client? httpClient,
+}) => showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  useSafeArea: true,
+  backgroundColor: Colors.white,
+  clipBehavior: Clip.antiAlias,
+  shape: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+  ),
+  sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+      ? AnimationStyle.noAnimation
+      : null,
+  builder: (context) => FractionallySizedBox(
+    heightFactor: .94,
+    child: Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: DevApiPage(store: store, httpClient: httpClient),
+    ),
+  ),
+);
 
 class DevApiPage extends StatefulWidget {
   const DevApiPage({super.key, this.httpClient, required this.store});
@@ -46,7 +47,10 @@ class DevApiPage extends StatefulWidget {
 
 class _DevApiPageState extends State<DevApiPage> {
   static const _json = JsonEncoder.withIndent('  ');
-  late final _engine = DevApiEngine(store: widget.store, client: widget.httpClient);
+  late final _engine = DevApiEngine(
+    store: widget.store,
+    client: widget.httpClient,
+  );
   final _report = TextEditingController(text: '{}');
   final _scroll = ScrollController();
   DevApiOperation _operation = DevApiOperation.bootstrap;

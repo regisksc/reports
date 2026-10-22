@@ -14,7 +14,6 @@ import 'package:reports/features/report/domain/report.dart';
 import 'package:reports/features/report/data/local_report_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 const testStore = LocalReportStore();
 
 void main() {
@@ -37,7 +36,10 @@ void main() {
       await _saveReports([olderFailed, uncertain]);
       final reportsBefore = (await tester.runAsync(testStore.loadReports))!;
       expect(reportsBefore.first.state, ReportState.submissionUncertain);
-      expect((await tester.runAsync(testStore.loadDraft))?.createdAt, oldDraft.createdAt);
+      expect(
+        (await tester.runAsync(testStore.loadDraft))?.createdAt,
+        oldDraft.createdAt,
+      );
 
       await tester.pumpWidget(ReportApp(client: _NoSend()));
       await _pumpUntil(
@@ -83,10 +85,15 @@ void main() {
         uncertain.createdAt,
       );
       expect(
-        (await tester.runAsync(testStore.loadReports))?.map((report) => report.toJson()),
+        (await tester.runAsync(
+          testStore.loadReports,
+        ))?.map((report) => report.toJson()),
         reportsBefore.map((report) => report.toJson()),
       );
-      expect((await tester.runAsync(testStore.loadDraft))?.createdAt, oldDraft.createdAt);
+      expect(
+        (await tester.runAsync(testStore.loadDraft))?.createdAt,
+        oldDraft.createdAt,
+      );
     },
   );
 
