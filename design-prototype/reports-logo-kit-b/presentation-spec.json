@@ -1,0 +1,34 @@
+{
+  "brand": "Reports",
+  "tagline": "Illegal dumping reports",
+  "brief": "A mobile-first neighborhood reporting app. Keep the identity friendly and cartoonish without turning it into a mascot. The mark should read clearly as a report or message, and retain the selected three-dot speech-bubble idea.",
+  "adjectives": ["friendly", "clear", "playful", "approachable"],
+  "criteria": "Keep the selected B speech bubble recognizable at small sizes, provide strong contrast, and preserve a real one-color cutout version.",
+  "industry": "consumer-app",
+  "mockups": ["app-icon", "website", "social", "favicon-tab", "sticker", "business-card"],
+  "brand_color": "#FF9600",
+  "tile_color": "#FF9600",
+  "greyscale": false,
+  "final": true,
+  "round": 2,
+  "concepts": [
+    {
+      "name": "Report Pop",
+      "symbol": "masters/symbol-color.svg",
+      "avatar": "exports/symbol/reports-pop-square.svg",
+      "lockup": "masters/lockup-horizontal-color.svg",
+      "stacked": "masters/lockup-stacked-color.svg",
+      "symbol_on_tile": "exports/symbol/reports-pop-app-icon.svg",
+      "symbol_on_dark": "exports/symbol/reports-pop-white.svg",
+      "lockup_on_dark": "exports/horizontal/reports-pop-white.svg",
+      "stacked_on_dark": "exports/stacked/reports-pop-white.svg",
+      "idea": "A speech bubble frames three lively report dots, with a hand-drawn rounded wordmark that keeps the brand playful without a character.",
+      "rationale": [
+        "The bubble signals a report or message at a glance.",
+        "The orange dots add a pop of personality while the charcoal silhouette stays readable.",
+        "Custom vector lettering keeps the full logo self-contained and font-free."
+      ]
+    }
+  ],
+  "recommendation": "Use the color horizontal lockup for app and web headers, the small symbol for favicons, and the stacked lockup where a compact vertical shape fits better. Keep orange as an accent and use charcoal for small text."
+}
