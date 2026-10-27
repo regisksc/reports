@@ -6,6 +6,11 @@ A Flutter app for reporting illegal dumping to MyLA311.
 - `animation/`: the authored submission animation project.
 - `design-prototype/`: interface references and artwork.
 
+The [full portal preview](design-prototype/full-portal/reports-full-portal.html)
+designs all 68 advertised services plus account, nearby, history, and settings
+flows. Its activity stays local to the demo; the native app currently sends
+illegal-dumping reports only.
+
 The app supports drafts, photos, map search, submission recovery and saved receipts. Submissions use the city's live system.
 
 Run Flutter commands from `reports/`.
