@@ -10,6 +10,11 @@ The app supports drafts, photos, map search, submission recovery and saved recei
 
 Run Flutter commands from `reports/`.
 
+Developer tools use the `REPORTS_DEV_MODE` build flag. It defaults to enabled in
+debug builds and disabled in profile and release builds. Pass
+`--dart-define=REPORTS_DEV_MODE=false` to hide them in debug, or
+`--dart-define=REPORTS_DEV_MODE=true` to explicitly enable them in another build.
+
 Project guidance lives in [AGENTS.md](AGENTS.md) and the [glossary](GLOSSARY.md).
 The [specification](.scratch/illegal-dump-reporter/spec.md) and
 [tickets](.scratch/illegal-dump-reporter/issues/) retain the project decisions
