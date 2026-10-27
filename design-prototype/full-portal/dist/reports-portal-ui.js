@@ -14,7 +14,10 @@ globalThis.ReportsUI = {
   },
   services(catalog, query) {
     const e = this.escape;
-    const rows = query.trim() ? this.search(catalog, query).map((s) => `<button class="list-button" data-service="${e(s.id)}"><span>${e(s.name)}<small>${e(s.group)}</small></span><span aria-hidden="true">›</span></button>`) : [...new Set(catalog.map((s) => s.group))].map((group) => `<button class="list-button" data-group="${e(group)}"><span>${e(group)}<small>${catalog.filter((s) => s.group === group).length} services</small></span><span aria-hidden="true">›</span></button>`);
+    const rows = query.trim() ? this.search(catalog, query).map((s) => `<button class="list-button" data-service="${e(s.id)}"><span>${e(s.name)}<small>${e(s.group)}</small></span><span aria-hidden="true">›</span></button>`) : [...new Set(catalog.map((s) => s.group))].map((group) => {
+      const count = catalog.filter((s) => s.group === group).length;
+      return `<button class="list-button" data-group="${e(group)}"><span>${e(group)}<small>${count} service${count === 1 ? '' : 's'}</small></span><span aria-hidden="true">›</span></button>`;
+    });
     return `<section data-od-id="services"><h1 class="page-title">Services</h1><p class="intro">Find the right place to start. Browse by category or search by name.</p><label class="sr-only" for="service-search">Search services</label><input class="search" id="service-search" data-search value="${e(query)}" placeholder="Search services"><div class="stack">${rows.length ? rows.join('') : '<div class="empty"><strong>No services found</strong>Try a different search.</div>'}</div></section>`;
   },
   category(catalog, group) {

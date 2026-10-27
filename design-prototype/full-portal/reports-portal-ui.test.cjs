@@ -8,6 +8,12 @@ const sourcePath = require.resolve('./dist/reports-portal-ui.js');
 vm.runInContext(fs.readFileSync(sourcePath, 'utf8'), context, { filename: sourcePath });
 const ui = context.ReportsUI;
 
+test('category counts use singular only for one service', () => {
+  const catalog = [{ group: 'Street' }, { group: 'Trees' }, { group: 'Trees' }];
+  const counts = Array.from(ui.services(catalog, '').matchAll(/<small>(\d+ services?)<\/small>/g), (match) => match[1]);
+  assert.deepEqual(counts, ['1 service', '2 services']);
+});
+
 test('service information explains resident requirements without City schema terms', () => {
   const base = { id: 'example', name: 'Example service', group: 'Street', evidence: '5 configured questions; Picklist; location boundary City Boundary; locator behavior must be captured.' };
   const variants = [
