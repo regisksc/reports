@@ -151,3 +151,30 @@ test('the canonical preview only mounts developer tools when its flag is explici
   assert.deepEqual({ defaultEntry, enabled, disabledEntry: await page.locator('#api-launch').count() },
     { defaultEntry: 0, enabled: true, disabledEntry: 0 });
 });
+
+test('additional service reports use the v2 step Back and Save and close header', async () => {
+  await page.getByRole('button', { name: 'Start a report', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Search services' }).fill('Flooding');
+  await page.locator('[data-service="flooding"]').click();
+  await page.locator('[data-action="start-flow"]').click();
+  await page.getByRole('button', { name: 'Save and close' }).waitFor({ state: 'visible', timeout: 1500 });
+  await page.locator('[data-flow-field="description"]').fill('Keep the report details');
+  await page.locator('[data-action="flow-next"]').click();
+  await page.locator('[data-flow-field="address"]').fill('Keep the selected location');
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  const detailsRetained = await page.locator('[data-flow-field="description"]').inputValue();
+  const title = await page.locator('.flow-header-title').textContent();
+  await page.getByRole('button', { name: 'Save and close' }).click();
+  const saved = await page.evaluate(({ detailsRetained, title }) => ({
+    detailsRetained, title, view: ReportsApp.getState().view,
+    address: JSON.parse(localStorage.getItem('reports-demo-records'))[0].draft.answers.address,
+  }), { detailsRetained, title });
+  await page.getByRole('button', { name: /View saved reports/ }).click();
+  await page.locator('[data-action="service-history"]').click();
+  await page.locator('[data-report]').click();
+  await page.getByRole('button', { name: 'Resume draft' }).click();
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  assert.deepEqual({ ...saved, backToServices: await page.locator('#service-search').isVisible() }, {
+    detailsRetained: 'Keep the report details', title: 'New report', view: 'home', address: 'Keep the selected location', backToServices: true,
+  });
+});

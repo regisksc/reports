@@ -87,6 +87,7 @@ globalThis.ReportsUI = {
       doc.querySelectorAll('[data-setting]').forEach((field) => { if (Object.hasOwn(settings, field.dataset.setting)) { if (field.type === 'checkbox') field.checked = settings[field.dataset.setting]; else field.value = settings[field.dataset.setting]; } });
       doc.querySelectorAll('[data-profile]').forEach((field) => { if (Object.hasOwn(profile, field.dataset.profile)) field.value = profile[field.dataset.profile]; });
       doc.querySelectorAll('.bottom-nav button').forEach((button) => { if (button.dataset.route === route) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current'); });
+      navigation.renderRoute?.(route, draft);
     };
     doc.addEventListener('click', (event) => {
       const target = event.target.closest('[data-route],[data-group],[data-service],[data-report],[data-action]');

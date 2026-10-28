@@ -165,11 +165,13 @@ test('main navigation opens the local resident modules', () => {
   const handlers = {};
   const main = { innerHTML: 'Home', focus() {} };
   const doc = { querySelector: () => main, querySelectorAll: () => [], addEventListener: (name, fn) => { handlers[name] = fn; } };
-  ui.mount(doc, [], {}, { getItem: () => null, setItem() {} });
+  const rendered = [];
+  ui.mount(doc, [], {}, { getItem: () => null, setItem() {} }, false, { renderRoute: (route) => rendered.push(route) });
   for (const route of ['account', 'history', 'nearby', 'settings', 'help', 'signin', 'register', 'recovery', 'profile', 'lookup']) {
     handlers.click({ target: { closest: () => ({ dataset: { route } }) }, preventDefault() {} });
     assert.match(main.innerHTML, new RegExp(`data-od-id="${route}"`));
   }
+  assert.deepEqual(rendered, ['account', 'history', 'nearby', 'settings', 'help', 'signin', 'register', 'recovery', 'profile', 'lookup']);
 });
 
 test('the flow bridge saves local drafts and demo receipts without City calls', () => {
