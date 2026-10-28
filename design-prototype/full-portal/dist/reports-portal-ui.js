@@ -50,9 +50,12 @@ globalThis.ReportsUI = {
     let draft = null;
     let reportId = '';
     let message = '';
-    const unavailable = new Set();
+    const session = navigation.session || {};
+    const unavailable = session.unavailable ||= new Set();
+    const retained = session.values ||= {};
     const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
     const read = (key, fallback, accepts) => {
+      if (Object.hasOwn(retained, key)) return retained[key];
       try {
         const raw = storage.getItem(key);
         const value = raw === null ? fallback : JSON.parse(raw);
@@ -69,6 +72,7 @@ globalThis.ReportsUI = {
     const storageNotice = '<p class="notice" data-storage-notice role="status">Some preview data could not be read or saved. Affected changes stay in this session. Existing stored data has not been replaced.</p>';
     const notifyStorage = () => { if (!main.querySelector('[data-storage-notice]')) main.insertAdjacentHTML('beforeend', storageNotice); };
     const write = (key, value) => {
+      retained[key] = value;
       if (!unavailable.has(key)) {
         try { storage.setItem(key, JSON.stringify(value)); return; } catch { unavailable.add(key); }
       }

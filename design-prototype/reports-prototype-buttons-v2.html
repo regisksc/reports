@@ -744,6 +744,7 @@ return maplibregl$1;
   const app = document.getElementById('app');
   if (!app) return;
   let state = createState();
+  const portalSession = {};
   let toastTimer;
   let returnFocus;
   let locationMap;
@@ -786,6 +787,7 @@ return maplibregl$1;
       addEventListener: (name, callback) => portal.addEventListener(name, callback)
     }, JSON.parse(document.getElementById('reports-service-catalog').textContent).map(root.ReportsUI.normalize), root.ReportsFlow, root.localStorage, false, {
       initialRoute: state.portalRoute,
+      session: portalSession,
       renderRoute: (route, draft) => {
         const header = app.querySelector('[data-od-id="app-header"]');
         if (route !== 'flow' || draft.confirmation) { header.innerHTML = portalHeader; return; }
@@ -1109,6 +1111,7 @@ return maplibregl$1;
     if (name === 'clear-data') {
       try {
         for (const key of [STORAGE_KEY, 'reports-demo-records', 'reports-demo-profile', 'reports-demo-settings']) root.localStorage.removeItem(key);
+        for (const key of Object.keys(portalSession)) delete portalSession[key];
         state = { ...createState(), view: 'settings' };
         render();
         notify('Local data cleared from this browser.');

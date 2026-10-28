@@ -197,3 +197,34 @@ test('v2 Clear local data removes expanded preview data while preserving unrelat
     draft: ReportsApp.getState().draft,
   })), { stores: [null, null, null, null], unrelated: 'keep', draft: null });
 });
+
+test('an extended draft survives Save and close when browser storage rejects writes', async () => {
+  await page.evaluate(() => {
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key.startsWith('reports-demo-')) throw new Error('Storage unavailable');
+      return setItem.call(this, key, value);
+    };
+  });
+  await page.getByRole('button', { name: 'Start a report', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Search services' }).fill('Flooding');
+  await page.locator('[data-service="flooding"]').click();
+  await page.locator('[data-action="start-flow"]').click();
+  await page.locator('[data-flow-field="description"]').fill('Keep this session draft');
+  await page.getByRole('button', { name: 'Save and close' }).click();
+  await page.getByRole('button', { name: /View saved reports/ }).click();
+  await page.locator('[data-action="service-history"]').click();
+  await page.locator('[data-report]').waitFor({ state: 'visible', timeout: 1500 });
+  await page.locator('[data-report]').click();
+  await page.getByRole('button', { name: 'Resume draft' }).click();
+  const description = await page.locator('[data-flow-field="description"]').inputValue();
+  await page.getByRole('button', { name: 'Save and close' }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.locator('[data-action="clear-data"]').click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Clear local data' }).click();
+  await page.getByRole('button', { name: 'Back to home' }).click();
+  await page.getByRole('button', { name: /View saved reports/ }).click();
+  await page.locator('[data-action="service-history"]').click();
+  assert.deepEqual({ description, afterClear: await page.locator('[data-report]').count() },
+    { description: 'Keep this session draft', afterClear: 0 });
+});
