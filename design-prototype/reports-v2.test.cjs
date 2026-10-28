@@ -56,3 +56,25 @@ test('choosing illegal dumping retains the v2 map, six-step report and replaceme
     flowStep: ReportsApp.getState().draft.step,
   })), { address: '200 N Spring St', mapPreserved: true, inspectorPreserved: true, flowStep: 0 });
 });
+
+test('the gear adds account journeys while keeping the original v2 settings', async () => {
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.locator('[data-action="account"]').waitFor({ state: 'visible', timeout: 1500 });
+  const retained = await page.locator('section[data-od-id$="-settings"]').evaluateAll((nodes) => nodes.map((node) => node.dataset.odId));
+  await page.locator('[data-action="account"]').click();
+  await page.getByRole('button', { name: 'Profile', exact: false }).click();
+  await page.getByRole('textbox', { name: 'Display name' }).fill('Neighborhood helper');
+  await page.getByRole('button', { name: 'Save demo profile' }).click();
+  await page.getByRole('button', { name: 'Preferences & accessibility' }).click();
+  await page.getByRole('switch', { name: 'Reduce motion' }).click();
+  assert.deepEqual(await page.evaluate((retained) => ({
+    retained,
+    view: ReportsApp.getState().view,
+    reduceMotion: ReportsApp.getState().settings.reduceMotion,
+    profile: JSON.parse(localStorage.getItem('reports-demo-profile')).name,
+    bottomBars: document.querySelectorAll('.bottom-nav').length,
+  }), retained), {
+    retained: ['motion-settings', 'saved-contact-settings', 'privacy-settings', 'local-data-settings'],
+    view: 'settings', reduceMotion: true, profile: 'Neighborhood helper', bottomBars: 0,
+  });
+});

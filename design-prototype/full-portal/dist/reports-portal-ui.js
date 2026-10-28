@@ -71,7 +71,10 @@ globalThis.ReportsUI = {
       if (!target) return;
       event.preventDefault();
       message = '';
-      if (target.dataset.route) { route = target.dataset.route; query = ''; }
+      if (target.dataset.route) {
+        if (navigation.navigateRoute?.(target.dataset.route)) return;
+        route = target.dataset.route; query = '';
+      }
       if (target.dataset.group) { group = target.dataset.group; route = 'category'; }
       if (target.dataset.service) { service = catalog.find((item) => item.id === target.dataset.service); route = 'service'; }
       if (target.dataset.report) { reportId = target.dataset.report; route = 'report'; }
