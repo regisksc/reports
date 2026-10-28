@@ -777,7 +777,14 @@ return maplibregl$1;
       querySelectorAll: selector => portal.querySelectorAll(selector),
       getElementById: id => portal.querySelector(`#${id}`),
       addEventListener: (name, callback) => portal.addEventListener(name, callback)
-    }, JSON.parse(document.getElementById('reports-service-catalog').textContent).map(root.ReportsUI.normalize), root.ReportsFlow, root.localStorage, false, { initialRoute: state.portalRoute });
+    }, JSON.parse(document.getElementById('reports-service-catalog').textContent).map(root.ReportsUI.normalize), root.ReportsFlow, root.localStorage, false, {
+      initialRoute: state.portalRoute,
+      startService: service => {
+        if (service.id !== 'illegal-dumping-item-pickup') return false;
+        handleAction('start-dumping', '', null);
+        return true;
+      }
+    });
     initializeLocationMap();
     if (state.dialog) app.querySelector('[data-action="cancel-dialog"]')?.focus();
     else if (focus) app.querySelector('#main-content')?.focus({ preventScroll: true });
@@ -1106,6 +1113,7 @@ return maplibregl$1;
     if (['home', 'history', 'help', 'settings'].includes(name)) { navigate(name); return; }
     if (name.startsWith('article-')) { navigate('help', { article: name.slice(8) }); return; }
     if (name.startsWith('resume')) { if (state.draft) navigate('flow', { editReturn: false }); return; }
+    if (name === 'start-dumping') { if (state.draft) openDialog('replace-draft', trigger); else startDraft(); return; }
     if (name.startsWith('start')) { navigate('portal', { portalRoute: 'services' }); return; }
     if (name === 'next') { nextStep(); return; }
     if (name === 'back') {

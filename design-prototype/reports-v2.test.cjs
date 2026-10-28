@@ -32,3 +32,27 @@ test('Start a Report opens all services without replacing an unfinished v2 repor
   }));
   assert.deepEqual(actual, { draft: original, services: 68, bottomBars: 0 });
 });
+
+test('choosing illegal dumping retains the v2 map, six-step report and replacement confirmation', async () => {
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.getByRole('button', { name: 'Start a report', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Search services' }).fill('Illegal Dumping');
+  await page.locator('[data-service="illegal-dumping-item-pickup"]').click();
+  await page.locator('[data-action="start-flow"]').click();
+  await page.locator('[data-od-id="flow-step-label"]').waitFor({ state: 'visible', timeout: 1500 });
+  await page.locator('[data-field="address"]').fill('200 N Spring St');
+  await page.getByRole('button', { name: 'Save and close' }).click();
+  await page.getByRole('button', { name: 'Start a report', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Search services' }).fill('Illegal Dumping');
+  await page.locator('[data-service="illegal-dumping-item-pickup"]').click();
+  await page.locator('[data-action="start-flow"]').click();
+  await page.getByRole('dialog').waitFor({ state: 'visible', timeout: 1500 });
+  await page.getByRole('button', { name: 'Keep it' }).click();
+  assert.deepEqual(await page.evaluate(() => ({
+    address: ReportsApp.getState().draft.address,
+    mapPreserved: Boolean(document.getElementById('maplibre-vendor')),
+    inspectorPreserved: Boolean(document.getElementById('reports-api-inspector-runtime')),
+    flowStep: ReportsApp.getState().draft.step,
+  })), { address: '200 N Spring St', mapPreserved: true, inspectorPreserved: true, flowStep: 0 });
+});

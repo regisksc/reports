@@ -75,7 +75,10 @@ globalThis.ReportsUI = {
       if (target.dataset.group) { group = target.dataset.group; route = 'category'; }
       if (target.dataset.service) { service = catalog.find((item) => item.id === target.dataset.service); route = 'service'; }
       if (target.dataset.report) { reportId = target.dataset.report; route = 'report'; }
-      if (target.dataset.action === 'start-flow') { draft = flow.create(service); reportId = `local-${Date.now()}-${reports.length + 1}`; route = 'flow'; }
+      if (target.dataset.action === 'start-flow') {
+        if (navigation.startService?.(service)) return;
+        draft = flow.create(service); reportId = `local-${Date.now()}-${reports.length + 1}`; route = 'flow';
+      }
       if (target.dataset.action === 'resume') { const record = reports.find((item) => item.id === reportId); service = catalog.find((item) => item.id === record.serviceId); draft = record.draft; route = 'flow'; }
       if (target.dataset.action === 'follow') { const record = reports.find((item) => item.id === reportId); record.following = !record.following; storage.setItem('reports-demo-records', JSON.stringify(reports)); }
       if (target.dataset.action === 'delete-local') { reports.splice(reports.findIndex((item) => item.id === reportId), 1); storage.setItem('reports-demo-records', JSON.stringify(reports)); route = 'history'; }
