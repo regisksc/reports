@@ -95,3 +95,31 @@ test('Nearby opens from Home and preserves saved filters and the existing draft'
     bottomBars: document.querySelectorAll('.bottom-nav').length,
   })), { area: 'Echo Park', heading: 'Nearby', address: 'Keep this location', bottomBars: 0 });
 });
+
+test('the existing saved reports page can reopen a completed report for another service', async () => {
+  await page.getByRole('button', { name: 'Start a report', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Search services' }).fill('Flooding');
+  await page.locator('[data-service="flooding"]').click();
+  await page.locator('[data-action="start-flow"]').click();
+  await page.locator('[data-flow-field="description"]').fill('Water across the road');
+  await page.locator('[data-action="flow-next"]').click();
+  await page.locator('[data-flow-field="address"]').fill('200 N Spring St');
+  await page.locator('[data-action="flow-confirm"]').click();
+  await page.locator('[data-action="flow-next"]').click();
+  await page.locator('[data-action="flow-add-photo"]').click();
+  await page.locator('[data-action="flow-next"]').click();
+  await page.locator('[data-flow-field="contactMode"]').selectOption('anonymous');
+  await page.locator('[data-action="flow-next"]').click();
+  await page.locator('[data-flow-field="reviewConsent"]').check();
+  await page.locator('[data-action="flow-submit"]').click();
+  await page.getByRole('button', { name: 'Back to home' }).click();
+  await page.getByRole('button', { name: /View saved reports/ }).click();
+  await page.locator('[data-action="service-history"]').waitFor({ state: 'visible', timeout: 1500 });
+  await page.locator('[data-action="service-history"]').click();
+  await page.locator('[data-report]').click();
+  assert.deepEqual(await page.evaluate(() => ({
+    heading: document.querySelector('[data-od-id="report-detail"] h1').textContent,
+    record: JSON.parse(localStorage.getItem('reports-demo-records'))[0].status,
+    nativeLikeHistoryKept: Boolean(ReportsApp.renderMarkup({ ...ReportsApp.createState(), view: 'history' }).includes('Needs confirmation')),
+  })), { heading: 'Flooding', record: 'Preview complete', nativeLikeHistoryKept: true });
+});
