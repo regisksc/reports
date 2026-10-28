@@ -140,3 +140,14 @@ test('expanded service controls keep the v2 rounded touch targets at narrow mobi
       overflow: document.documentElement.scrollWidth > innerWidth };
   }, rounded), { rounded: true, touchHeight: true, sharedFont: true, bordered: true, overflow: false });
 });
+
+test('the canonical preview only mounts developer tools when its flag is explicitly enabled', async () => {
+  const defaultEntry = await page.locator('#api-launch').count();
+  await page.goto(`${pathToFileURL(path.join(__dirname, 'reports-prototype-buttons-v2.html')).href}?dev=1`);
+  await page.locator('#api-launch').click();
+  const enabled = await page.locator('#api-sheet').isVisible();
+  await page.locator('#api-close').click();
+  await page.goto(`${pathToFileURL(path.join(__dirname, 'reports-prototype-buttons-v2.html')).href}?dev=0`);
+  assert.deepEqual({ defaultEntry, enabled, disabledEntry: await page.locator('#api-launch').count() },
+    { defaultEntry: 0, enabled: true, disabledEntry: 0 });
+});

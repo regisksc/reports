@@ -2024,7 +2024,7 @@ return maplibregl$1;
 
   const api = { OPERATIONS, buildPayload, browserSubmissionInfo, createMyLA311Client, createRunController, extractAuraContext, formBody, markup, mount, parseAuraReply, submissionParams };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (root.document) root.ReportsInspector = mount(root);
+  if (root.document && new URLSearchParams(root.location.search).get('dev') === '1') root.ReportsInspector = mount(root);
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 </body>
