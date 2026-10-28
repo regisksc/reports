@@ -78,3 +78,20 @@ test('the gear adds account journeys while keeping the original v2 settings', as
     view: 'settings', reduceMotion: true, profile: 'Neighborhood helper', bottomBars: 0,
   });
 });
+
+test('Nearby opens from a contextual Home action and returns to the unchanged draft', async () => {
+  await page.evaluate(() => localStorage.setItem('reports-prototype-v1', JSON.stringify({ draft: { ...ReportsApp.createDraft(), address: 'Keep this location' } })));
+  await page.reload();
+  await page.getByRole('button', { name: /Nearby/ }).waitFor({ state: 'visible', timeout: 1500 });
+  await page.getByRole('button', { name: /Nearby/ }).click();
+  await page.getByRole('textbox', { name: 'Search an area' }).fill('Echo Park');
+  await page.getByRole('button', { name: 'Apply demo filters' }).click();
+  await page.getByRole('button', { name: 'Back to home' }).click();
+  await page.getByRole('button', { name: /Nearby/ }).click();
+  assert.deepEqual(await page.evaluate(() => ({
+    area: document.querySelector('[data-setting="area"]').value,
+    heading: document.querySelector('.task-header-title').textContent,
+    address: ReportsApp.getState().draft.address,
+    bottomBars: document.querySelectorAll('.bottom-nav').length,
+  })), { area: 'Echo Park', heading: 'Nearby', address: 'Keep this location', bottomBars: 0 });
+});
