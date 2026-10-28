@@ -207,6 +207,46 @@ test('the flow bridge saves local drafts and demo receipts without City calls', 
   assert.match(main.innerHTML, /City status not available/);
 });
 
+test('an extended Report resumes the same autosaved draft after Home navigation and reload', () => {
+  const values = {};
+  const storage = { getItem: (key) => values[key] || null, setItem: (key, value) => { values[key] = value; } };
+  const service = { id: 'flooding', name: 'Flooding', group: 'Street', mode: 'guest-form' };
+  const flow = {
+    create: () => ({ step: 'details', description: '' }),
+    render: (draft) => `<p>${draft.step}: ${draft.description}</p>`,
+    handle: (draft, _service, action, payload) => action === 'field' ? { ...draft, [payload.field]: payload.value } : { ...draft, step: action }
+  };
+  const mount = () => {
+    const handlers = {};
+    const main = { innerHTML: 'Home screen', focus() {} };
+    const doc = { querySelector: () => main, querySelectorAll: () => [], addEventListener: (name, fn) => { handlers[name] = fn; } };
+    ui.mount(doc, [service], flow, storage);
+    return { main, handlers, click: (dataset) => handlers.click({ target: { closest: () => ({ dataset }) }, preventDefault() {} }) };
+  };
+  const first = mount();
+  first.click({ service: 'flooding' });
+  first.click({ action: 'start-flow' });
+  const created = JSON.parse(values['reports-demo-records']);
+  assert.equal(created.length, 1);
+  const id = created[0].id;
+  first.handlers.input({ target: { dataset: { flowField: 'description' }, type: 'text', value: 'Water along the curb' } });
+  first.click({ action: 'flow-next' });
+  first.click({ route: 'home' });
+  assert.equal(first.main.innerHTML, 'Home screen');
+  const reloaded = mount();
+  reloaded.click({ route: 'history' });
+  reloaded.click({ report: id });
+  reloaded.click({ action: 'resume' });
+  assert.match(reloaded.main.innerHTML, /next: Water along the curb/);
+  reloaded.handlers.input({ target: { dataset: { flowField: 'description' }, type: 'text', value: 'Updated after reload' } });
+  reloaded.click({ action: 'flow-back' });
+  const restored = JSON.parse(values['reports-demo-records']);
+  assert.equal(restored.length, 1);
+  assert.equal(restored[0].id, id);
+  assert.deepEqual(restored[0].draft, { step: 'back', description: 'Updated after reload' });
+  assert.equal(restored[0].status, 'Draft');
+});
+
 test('typing a report field preserves the focused input instead of replacing it', () => {
   const handlers = {};
   const main = { innerHTML: 'Home', focus() {} };

@@ -102,7 +102,7 @@ globalThis.ReportsUI = {
       if (target.dataset.report) { reportId = target.dataset.report; route = 'report'; }
       if (target.dataset.action === 'start-flow') {
         if (navigation.startService?.(service)) return;
-        draft = flow.create(service); reportId = `local-${Date.now()}-${reports.length + 1}`; route = 'flow';
+        draft = flow.create(service); reportId = `local-${Date.now()}-${reports.length + 1}`; route = 'flow'; save();
       }
       if (target.dataset.action === 'resume') { const record = reports.find((item) => item.id === reportId); service = catalog.find((item) => item.id === record.serviceId); draft = record.draft; route = 'flow'; }
       if (target.dataset.action === 'follow') { const record = reports.find((item) => item.id === reportId); record.following = !record.following; write('reports-demo-records', reports); }
@@ -112,7 +112,7 @@ globalThis.ReportsUI = {
       if (target.dataset.action && target.dataset.action.startsWith('flow-')) {
         const action = target.dataset.action.slice(5);
         draft = flow.handle(draft, service, action, { index: target.dataset.index });
-        if (action === 'save' || draft.confirmation) save();
+        save();
         if (action === 'save') route = 'history';
       }
       draw();
@@ -123,6 +123,7 @@ globalThis.ReportsUI = {
       if ('flowField' in event.target.dataset) {
         const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
         draft = flow.handle(draft, service, 'field', { field: event.target.dataset.flowField, value });
+        save();
         if (event.target.type === 'checkbox' || event.target.tagName === 'SELECT') { draw(); doc.querySelector(`[data-flow-field="${event.target.dataset.flowField}"]`).focus(); }
         return;
       }
