@@ -1,3 +1,5 @@
+export 'report_contact.dart';
+
 enum ReportState { notSent, submitted, failed, submissionUncertain }
 
 class ReportDraft {
