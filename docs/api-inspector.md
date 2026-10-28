@@ -30,9 +30,9 @@ Editing an operation input or the Report draft clears the prior result as stale.
 
 ## Source, export, and verification
 
-- Canonical Open Design project: `Reports Motion Design Brief`, ID `74204d10-326c-44f9-b11a-7d9401baa491`.
-- Canonical entry: `reports-prototype-buttons-v2.html`; standalone runtime: `reports-api-inspector.js`, embedded byte-for-byte as `reports-api-inspector-runtime`.
+- Canonical design: [the repository v2 HTML](../design-prototype/reports-prototype-buttons-v2.html). OpenDesign copies follow this file.
+- The inspector runtime is embedded as `reports-api-inspector-runtime` in that repository file. The preview mounts it only with the explicit `?dev=1` flag; normal preview navigation does not expose it.
 - Contract source: repo `reports/lib/features/report/data/portal_submission_client.dart`, `docs/portal-api.md`, and `docs/api-workspace/README.md`.
 - Focused tests use controlled transports and explicitly synthetic fixture responses; they make no City requests and do not expose a mock mode in the product UI.
-- The prior `file://` preview was rejected by browser URL policy before navigation or request dispatch. No supported HTTPS preview URL was found in the existing Open Design project/deployment metadata. The safe live UI request smoke therefore remains unverified; no server, alternate URL, or CORS/security bypass was attempted.
+- Browser regression tests exercise the canonical repository design with City network requests blocked. A live UI request smoke remains unverified.
 - No City write, submission, or attachment upload was executed for this change. The original successful `submitCase` envelope and native-send provenance remain unverified as documented in `docs/portal-api.md`.
