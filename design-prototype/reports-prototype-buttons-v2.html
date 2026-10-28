@@ -1108,7 +1108,7 @@ return maplibregl$1;
     if (name === 'replace-draft') { state = { ...state, dialog: null }; startDraft(); return; }
     if (name === 'clear-data') {
       try {
-        root.localStorage.removeItem(STORAGE_KEY);
+        for (const key of [STORAGE_KEY, 'reports-demo-records', 'reports-demo-profile', 'reports-demo-settings']) root.localStorage.removeItem(key);
         state = { ...createState(), view: 'settings' };
         render();
         notify('Local data cleared from this browser.');

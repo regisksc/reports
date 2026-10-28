@@ -178,3 +178,22 @@ test('additional service reports use the v2 step Back and Save and close header'
     detailsRetained: 'Keep the report details', title: 'New report', view: 'home', address: 'Keep the selected location', backToServices: true,
   });
 });
+
+test('v2 Clear local data removes expanded preview data while preserving unrelated browser data', async () => {
+  await page.evaluate(() => {
+    localStorage.setItem('reports-prototype-v1', JSON.stringify({ draft: ReportsApp.createDraft() }));
+    localStorage.setItem('reports-demo-records', '[]');
+    localStorage.setItem('reports-demo-profile', '{"name":"Local resident"}');
+    localStorage.setItem('reports-demo-settings', '{"area":"Echo Park"}');
+    localStorage.setItem('unrelated-preview', 'keep');
+  });
+  await page.reload();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.locator('[data-action="clear-data"]').click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Clear local data' }).click();
+  assert.deepEqual(await page.evaluate(() => ({
+    stores: ['reports-prototype-v1', 'reports-demo-records', 'reports-demo-profile', 'reports-demo-settings'].map((key) => localStorage.getItem(key)),
+    unrelated: localStorage.getItem('unrelated-preview'),
+    draft: ReportsApp.getState().draft,
+  })), { stores: [null, null, null, null], unrelated: 'keep', draft: null });
+});
