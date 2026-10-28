@@ -39,11 +39,11 @@ globalThis.ReportsUI = {
     const e = this.escape;
     return `<section data-od-id="report-detail"><button class="back" data-route="history">← My Reports</button><p class="eyebrow">Local demo record · ${e(report.id)}</p><h1 class="page-title">${e(report.name)}</h1><span class="tag">${e(report.status)}</span><div class="timeline"><p><strong>Local preview</strong><br><span class="muted">Saved on this device</span></p><p><strong>City status not available</strong><br><span class="muted">No request was sent.</span></p></div><div class="notice">City actions to edit or cancel are not verified. You can manage only the local preview.</div><div class="actions">${report.status === 'Draft' ? '<button class="btn btn-primary" data-action="resume">Resume draft</button>' : ''}<button class="btn" data-action="follow">${report.following ? 'Unfollow locally' : 'Follow locally'}</button><button class="btn" data-action="delete-local">Remove local preview</button></div></section>`;
   },
-  mount(doc, catalog, flow, storage, dev = false) {
+  mount(doc, catalog, flow, storage, dev = false, navigation = {}) {
     const main = doc.querySelector('main');
     if (dev) doc.querySelector('[data-developer]').hidden = false;
     const home = main.innerHTML;
-    let route = 'home';
+    let route = navigation.initialRoute || 'home';
     let group = '';
     let service = null;
     let query = '';
@@ -118,6 +118,7 @@ globalThis.ReportsUI = {
       draw();
       main.focus();
     });
+    if (route !== 'home') draw();
   },
   page(route) {
     const pages = {
