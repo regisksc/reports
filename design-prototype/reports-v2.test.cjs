@@ -79,7 +79,7 @@ test('the gear adds account journeys while keeping the original v2 settings', as
   });
 });
 
-test('Nearby opens from a contextual Home action and returns to the unchanged draft', async () => {
+test('Nearby opens from Home and preserves saved filters and the existing draft', async () => {
   await page.evaluate(() => localStorage.setItem('reports-prototype-v1', JSON.stringify({ draft: { ...ReportsApp.createDraft(), address: 'Keep this location' } })));
   await page.reload();
   await page.getByRole('button', { name: /Nearby/ }).waitFor({ state: 'visible', timeout: 1500 });
