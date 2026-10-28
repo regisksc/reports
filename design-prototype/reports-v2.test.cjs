@@ -123,3 +123,20 @@ test('the existing saved reports page can reopen a completed report for another 
     nativeLikeHistoryKept: Boolean(ReportsApp.renderMarkup({ ...ReportsApp.createState(), view: 'history' }).includes('Needs confirmation')),
   })), { heading: 'Flooding', record: 'Preview complete', nativeLikeHistoryKept: true });
 });
+
+test('expanded service controls keep the v2 rounded touch targets at narrow mobile widths', async () => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.getByRole('button', { name: 'Start a report', exact: true }).click();
+  const rounded = await page.locator('.list-button').first().evaluate((node) => parseFloat(getComputedStyle(node).borderRadius) >= 12);
+  await page.getByRole('textbox', { name: 'Search services' }).fill('Flooding');
+  await page.locator('[data-service="flooding"]').click();
+  await page.locator('[data-action="start-flow"]').click();
+  assert.deepEqual(await page.evaluate((rounded) => {
+    const control = document.querySelector('[data-flow-field="description"]');
+    const style = getComputedStyle(control);
+    return { rounded, touchHeight: control.getBoundingClientRect().height >= 44,
+      sharedFont: style.fontFamily === getComputedStyle(document.body).fontFamily,
+      bordered: parseFloat(style.borderTopWidth) === 2,
+      overflow: document.documentElement.scrollWidth > innerWidth };
+  }, rounded), { rounded: true, touchHeight: true, sharedFont: true, bordered: true, overflow: false });
+});
