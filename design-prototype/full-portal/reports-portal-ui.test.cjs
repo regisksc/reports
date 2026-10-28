@@ -325,6 +325,63 @@ test('nearby preview includes the observed search and district filters', () => {
   for (const text of ['Start date', 'End date', 'Neighborhood Council District', 'Council District', 'Map or list', '2,000']) assert.match(markup, new RegExp(text));
 });
 
+test('unreadable or unavailable preview storage keeps resident pages usable without replacing saved data', () => {
+  const recoverable = { id: 'local-kept', name: 'Flooding', serviceId: 'flooding', status: 'Draft', draft: { step: 'details' } };
+  const cases = [
+    { records: '{', settings: '{', profile: '{' },
+    { records: '{}', settings: '[]', profile: '[]' },
+    { records: 'null', settings: 'null', profile: 'null' },
+    { records: '1', settings: 'true', profile: '"text"' },
+    { records: JSON.stringify([recoverable, null, [], 'invalid', {}, { id: 1, name: 'Invalid', status: 'Draft' }, { id: 'invalid', name: 1, status: 'Draft' }, { id: 'invalid', name: 'Invalid', status: 1 }]), settings: '[]', profile: '[]', retained: true },
+    { deniedReads: true },
+    { deniedWrites: true }
+  ];
+  for (const scenario of cases) {
+    const handlers = {};
+    const main = { innerHTML: 'Home', focus() {}, querySelector: () => main.innerHTML.includes('data-storage-notice') ? {} : null, insertAdjacentHTML: (_position, markup) => { main.innerHTML += markup; } };
+    const doc = { querySelector: () => main, querySelectorAll: () => [], addEventListener: (name, fn) => { handlers[name] = fn; } };
+    const values = { 'reports-demo-records': scenario.records, 'reports-demo-settings': scenario.settings, 'reports-demo-profile': scenario.profile };
+    const original = { ...values };
+    let writes = 0;
+    const storage = {
+      getItem(key) { if (scenario.deniedReads) throw new Error('Storage blocked'); return values[key] || null; },
+      setItem(key, value) { writes++; if (scenario.deniedWrites) throw new Error('Storage full'); values[key] = value; }
+    };
+    const flow = { create: () => ({ step: 'details' }), render: (draft) => `<p>${draft.step}</p>`, handle: (draft) => draft };
+    const catalog = [{ id: 'flooding', name: 'Flooding', group: 'Street', mode: 'guest-form' }];
+    let serviceHandoff = '';
+    const navigation = { initialRoute: 'services', navigateRoute: (route) => route === 'settings', startService: (service) => { if (serviceHandoff) return false; serviceHandoff = service.id; return true; } };
+    assert.doesNotThrow(() => ui.mount(doc, catalog, flow, storage, false, navigation));
+    const click = (dataset) => handlers.click({ target: { closest: () => ({ dataset }) }, preventDefault() {} });
+    assert.match(main.innerHTML, /Services/);
+    click({ route: 'nearby' });
+    handlers.input({ target: { dataset: { setting: 'area' }, type: 'text', value: 'Hollywood' } });
+    assert.match(main.innerHTML, /stay in this session/);
+    click({ action: 'nearby-clear' });
+    click({ route: 'account' });
+    click({ route: 'settings' });
+    assert.match(main.innerHTML, /Your account/);
+    handlers.submit({ target: { dataset: { form: 'profile' }, elements: [{ name: 'name', value: 'Session resident' }] }, preventDefault() {} });
+    assert.match(main.innerHTML, /Your account/);
+    assert.match(main.innerHTML, /profile updated for this session/);
+    click({ service: 'flooding' });
+    click({ action: 'start-flow' });
+    assert.equal(serviceHandoff, 'flooding');
+    assert.match(main.innerHTML, /Before you start/);
+    click({ action: 'start-flow' });
+    click({ action: 'flow-save' });
+    assert.match(main.innerHTML, /data-report="local-/);
+    if (scenario.retained) assert.match(main.innerHTML, /data-report="local-kept"/);
+    const reportId = main.innerHTML.match(/data-report="(local-[^"]+)"/)[1];
+    click({ report: reportId });
+    click({ action: 'follow' });
+    click({ action: 'delete-local' });
+    assert.match(main.innerHTML, /Existing stored data has not been replaced/);
+    assert.deepEqual(values, original);
+    assert.equal(writes, scenario.deniedWrites ? 3 : 0);
+  }
+});
+
 test('guided flow controls inherit the raised Reports visual language', () => {
   const css = fs.readFileSync(path.join(__dirname, 'reports-portal.css'), 'utf8');
   assert.match(css, /\.flow-field/);

@@ -50,18 +50,40 @@ globalThis.ReportsUI = {
     let draft = null;
     let reportId = '';
     let message = '';
-    const reports = JSON.parse(storage.getItem('reports-demo-records') || '[]');
-    const settings = JSON.parse(storage.getItem('reports-demo-settings') || '{}');
-    const profile = JSON.parse(storage.getItem('reports-demo-profile') || '{}');
+    const unavailable = new Set();
+    const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+    const read = (key, fallback, accepts) => {
+      try {
+        const raw = storage.getItem(key);
+        const value = raw === null ? fallback : JSON.parse(raw);
+        if (accepts(value)) return value;
+      } catch {}
+      unavailable.add(key);
+      return fallback;
+    };
+    const storedReports = read('reports-demo-records', [], Array.isArray);
+    const reports = storedReports.filter((row) => object(row) && ['id', 'name', 'status'].every((key) => typeof row[key] === 'string'));
+    if (reports.length !== storedReports.length) unavailable.add('reports-demo-records');
+    const settings = read('reports-demo-settings', {}, object);
+    const profile = read('reports-demo-profile', {}, object);
+    const storageNotice = '<p class="notice" data-storage-notice role="status">Some preview data could not be read or saved. Affected changes stay in this session. Existing stored data has not been replaced.</p>';
+    const notifyStorage = () => { if (!main.querySelector('[data-storage-notice]')) main.insertAdjacentHTML('beforeend', storageNotice); };
+    const write = (key, value) => {
+      if (!unavailable.has(key)) {
+        try { storage.setItem(key, JSON.stringify(value)); return; } catch { unavailable.add(key); }
+      }
+      notifyStorage();
+    };
     const save = () => {
       const record = { id: reportId, name: service.name, serviceId: service.id, status: draft.confirmation ? 'Preview complete' : 'Draft', draft };
       const index = reports.findIndex((item) => item.id === reportId);
       if (index < 0) reports.push(record); else reports[index] = { ...reports[index], ...record };
-      storage.setItem('reports-demo-records', JSON.stringify(reports));
+      write('reports-demo-records', reports);
     };
     const draw = () => {
       main.innerHTML = route === 'home' ? home : route === 'services' ? this.services(catalog, query) : route === 'category' ? this.category(catalog, group) : route === 'service' ? this.service(service) : route === 'flow' ? flow.render(draft, service, this.escape) : route === 'report' ? this.report(reports.find((item) => item.id === reportId)) : route === 'history' ? this.page(route).replace('<div id="report-list"></div>', this.reports(reports)) : this.page(route);
       if (message) main.innerHTML += `<p class="notice" role="status">${this.escape(message)}</p>`;
+      if (unavailable.size) main.innerHTML += storageNotice;
       doc.querySelectorAll('[data-setting]').forEach((field) => { if (Object.hasOwn(settings, field.dataset.setting)) { if (field.type === 'checkbox') field.checked = settings[field.dataset.setting]; else field.value = settings[field.dataset.setting]; } });
       doc.querySelectorAll('[data-profile]').forEach((field) => { if (Object.hasOwn(profile, field.dataset.profile)) field.value = profile[field.dataset.profile]; });
       doc.querySelectorAll('.bottom-nav button').forEach((button) => { if (button.dataset.route === route) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current'); });
@@ -83,10 +105,10 @@ globalThis.ReportsUI = {
         draft = flow.create(service); reportId = `local-${Date.now()}-${reports.length + 1}`; route = 'flow';
       }
       if (target.dataset.action === 'resume') { const record = reports.find((item) => item.id === reportId); service = catalog.find((item) => item.id === record.serviceId); draft = record.draft; route = 'flow'; }
-      if (target.dataset.action === 'follow') { const record = reports.find((item) => item.id === reportId); record.following = !record.following; storage.setItem('reports-demo-records', JSON.stringify(reports)); }
-      if (target.dataset.action === 'delete-local') { reports.splice(reports.findIndex((item) => item.id === reportId), 1); storage.setItem('reports-demo-records', JSON.stringify(reports)); route = 'history'; }
+      if (target.dataset.action === 'follow') { const record = reports.find((item) => item.id === reportId); record.following = !record.following; write('reports-demo-records', reports); }
+      if (target.dataset.action === 'delete-local') { reports.splice(reports.findIndex((item) => item.id === reportId), 1); write('reports-demo-records', reports); route = 'history'; }
       if (target.dataset.action === 'nearby-filter') message = 'Filters are saved locally. Nearby results are not live.';
-      if (target.dataset.action === 'nearby-clear') { Object.assign(settings, { area: '', startDate: '', endDate: '', nearbyStatus: 'All statuses', nearbyType: '', neighborhoodDistrict: '', councilDistrict: '', nearbyView: 'List' }); storage.setItem('reports-demo-settings', JSON.stringify(settings)); message = 'Demo filters cleared.'; }
+      if (target.dataset.action === 'nearby-clear') { Object.assign(settings, { area: '', startDate: '', endDate: '', nearbyStatus: 'All statuses', nearbyType: '', neighborhoodDistrict: '', councilDistrict: '', nearbyView: 'List' }); write('reports-demo-settings', settings); message = 'Demo filters cleared.'; }
       if (target.dataset.action && target.dataset.action.startsWith('flow-')) {
         const action = target.dataset.action.slice(5);
         draft = flow.handle(draft, service, action, { index: target.dataset.index });
@@ -97,7 +119,7 @@ globalThis.ReportsUI = {
       main.focus();
     });
     doc.addEventListener('input', (event) => {
-      if ('setting' in event.target.dataset) { settings[event.target.dataset.setting] = event.target.type === 'checkbox' ? event.target.checked : event.target.value; storage.setItem('reports-demo-settings', JSON.stringify(settings)); return; }
+      if ('setting' in event.target.dataset) { settings[event.target.dataset.setting] = event.target.type === 'checkbox' ? event.target.checked : event.target.value; write('reports-demo-settings', settings); return; }
       if ('flowField' in event.target.dataset) {
         const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
         draft = flow.handle(draft, service, 'field', { field: event.target.dataset.flowField, value });
@@ -120,11 +142,11 @@ globalThis.ReportsUI = {
         const match = reports.find((item) => item.id === data.reference);
         if (match) { reportId = match.id; route = 'report'; message = ''; } else { route = 'lookup'; message = 'No local preview matches that reference. City lookup is not connected.'; }
       } else if (form === 'recovery') { route = 'recovery'; message = 'Demo only: no email was sent.'; }
-      else { Object.assign(profile, data); storage.setItem('reports-demo-profile', JSON.stringify(profile)); route = 'account'; message = 'Demo profile saved locally. No City account was changed.'; }
+      else { Object.assign(profile, data); write('reports-demo-profile', profile); route = 'account'; message = unavailable.has('reports-demo-profile') ? 'Demo profile updated for this session. No City account was changed.' : 'Demo profile saved locally. No City account was changed.'; }
       draw();
       main.focus();
     });
-    if (route !== 'home') draw();
+    if (route !== 'home' || unavailable.size) draw();
   },
   page(route) {
     const pages = {
