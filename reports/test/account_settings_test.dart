@@ -160,6 +160,12 @@ void main() {
       find.textContaining('Illegal dumping can be submitted'),
       findsOneWidget,
     );
+    expect(
+      find.textContaining(
+        'No account is needed for an illegal-dumping report.',
+      ),
+      findsOneWidget,
+    );
   });
   testWidgets('forget contact keeps submitted records', (tester) async {
     SharedPreferences.setMockInitialValues({
@@ -756,6 +762,42 @@ void main() {
         'reports_demo_updates_v1',
       ),
       isNull,
+    );
+  });
+  testWidgets('direct demo sign in returns to the service information page', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(builder: (_) => const DemoSignInPage()),
+              ),
+              child: const Text('Service information'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Service information'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Email'),
+      'a@example.com',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Demo password'),
+      'demo',
+    );
+    await tester.tap(find.text('Continue in demo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Service information'), findsOneWidget);
+    expect(
+      find.text('Demo profile saved locally. No City account was changed.'),
+      findsOneWidget,
     );
   });
 }

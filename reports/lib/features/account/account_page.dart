@@ -123,6 +123,23 @@ class _AccountPageState extends State<AccountPage> {
   }
 }
 
+class DemoSignInPage extends StatelessWidget {
+  const DemoSignInPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final route = ModalRoute.of(context);
+    return _AccountForm(
+      mode: 'signin',
+      onSaved: () {
+        final navigator = Navigator.of(context);
+        navigator.popUntil((item) => item == route);
+        navigator.pop();
+      },
+    );
+  }
+}
+
 class _AccountForm extends StatefulWidget {
   const _AccountForm({required this.mode, required this.onSaved});
   final String mode;

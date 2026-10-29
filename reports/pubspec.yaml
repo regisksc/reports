@@ -39,6 +39,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/brand/reports-pop-horizontal-color.png
+    - assets/service_catalog.json
 
   fonts:
     - family: Mona Sans
