@@ -17,10 +17,10 @@ class NearbyPage extends StatefulWidget {
   static Future<void> clearSavedFilters() async {
     _session = null;
     _hasSession = true;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(storageKey);
-    } catch (_) {}
+    final prefs = await SharedPreferences.getInstance();
+    if (!await prefs.remove(storageKey)) {
+      throw StateError('Nearby filters could not be cleared');
+    }
   }
 
   @override
@@ -37,6 +37,7 @@ class _NearbyPageState extends State<NearbyPage> {
   DateTime? _start;
   DateTime? _end;
   int _revision = 0;
+  String? _clearError;
 
   @override
   void initState() {
@@ -111,7 +112,17 @@ class _NearbyPageState extends State<NearbyPage> {
       _status = 'All statuses';
       _view = 'List';
     });
-    await NearbyPage.clearSavedFilters();
+    try {
+      await NearbyPage.clearSavedFilters();
+      if (mounted) setState(() => _clearError = null);
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _clearError =
+              'Filters cleared for this session, but saved filters could not be removed.',
+        );
+      }
+    }
   }
 
   Future<void> _date(bool start) async {
@@ -122,7 +133,7 @@ class _NearbyPageState extends State<NearbyPage> {
       firstDate: DateTime(2000),
       lastDate: DateTime(now.year + 10),
     );
-    if (picked != null && mounted)
+    if (picked != null && mounted) {
       setState(() {
         _markEdited();
         if (start) {
@@ -131,6 +142,7 @@ class _NearbyPageState extends State<NearbyPage> {
           _end = picked;
         }
       });
+    }
   }
 
   @override
@@ -249,6 +261,7 @@ class _NearbyPageState extends State<NearbyPage> {
               onPressed: _clear,
               child: const Text('Clear filters'),
             ),
+            if (_clearError != null) Text(_clearError!),
             const SizedBox(height: 24),
             Container(
               key: Key('nearby-${_view.toLowerCase()}'),

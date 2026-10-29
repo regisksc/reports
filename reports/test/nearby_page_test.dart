@@ -117,7 +117,7 @@ void main() {
   ) async {
     SharedPreferencesStorePlatform.instance = _UnavailableStore();
     SharedPreferences.resetStatic();
-    await NearbyPage.clearSavedFilters();
+    await expectLater(NearbyPage.clearSavedFilters(), throwsStateError);
     await tester.pumpWidget(const MaterialApp(home: NearbyPage()));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -131,7 +131,7 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: NearbyPage()));
     await tester.pumpAndSettle();
     expect(find.text('Echo Park'), findsOneWidget);
-    await NearbyPage.clearSavedFilters();
+    await expectLater(NearbyPage.clearSavedFilters(), throwsStateError);
     SharedPreferences.setMockInitialValues({});
   });
 
@@ -164,6 +164,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Open nearby'), findsOneWidget);
   });
+  testWidgets('clear reports persistent storage failure', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await NearbyPage.clearSavedFilters();
+    SharedPreferencesStorePlatform.instance = _CannotRemoveStore();
+    SharedPreferences.resetStatic();
+    await expectLater(NearbyPage.clearSavedFilters(), throwsStateError);
+    await tester.pumpWidget(const MaterialApp(home: NearbyPage()));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Clear filters'));
+    await tester.tap(find.text('Clear filters'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('Filters cleared for this session'),
+      findsOneWidget,
+    );
+    SharedPreferences.setMockInitialValues({});
+  });
 }
 
 class _UnavailableStore extends InMemorySharedPreferencesStore {
@@ -179,4 +196,10 @@ class _DelayedStore extends InMemorySharedPreferencesStore {
 
   @override
   Future<Map<String, Object>> getAll() => ready.future;
+}
+
+class _CannotRemoveStore extends InMemorySharedPreferencesStore {
+  _CannotRemoveStore() : super.empty();
+  @override
+  Future<bool> remove(String key) async => false;
 }
