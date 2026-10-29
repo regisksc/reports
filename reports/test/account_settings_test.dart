@@ -9,6 +9,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/types.dart';
 
+Finder accountField(String label) => find.descendant(
+  of: find.bySemanticsLabel(label),
+  matching: find.byType(TextFormField),
+);
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -53,11 +58,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Create demo account'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextFormField, 'Name'), 'Alex');
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Email'),
-      'alex@example.com',
-    );
+    await tester.enterText(accountField('Name'), 'Alex');
+    await tester.enterText(accountField('Email'), 'alex@example.com');
     await tester.tap(find.text('Create local profile'));
     await tester.pumpAndSettle();
     expect(
@@ -115,23 +117,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Forgot password?'));
       await tester.pumpAndSettle();
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Email'),
-        'alex@example.com',
-      );
+      await tester.enterText(accountField('Email'), 'alex@example.com');
       await tester.tap(find.text('Preview recovery'));
       await tester.pumpAndSettle();
       expect(find.text('Demo only: no email was sent.'), findsOneWidget);
       await tester.pageBack();
       await tester.pumpAndSettle();
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Email'),
-        'alex@example.com',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Demo password'),
-        'example',
-      );
+      await tester.enterText(accountField('Email'), 'alex@example.com');
+      await tester.enterText(accountField('Demo password'), 'example');
       await tester.tap(find.text('Continue in demo'));
       await tester.pumpAndSettle();
       final prefs = await SharedPreferences.getInstance();
@@ -204,10 +197,7 @@ void main() {
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
     expect(find.text('Alex'), findsOneWidget);
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Display name'),
-      'Taylor',
-    );
+    await tester.enterText(accountField('Display name'), 'Taylor');
     await tester.tap(find.text('Save demo profile'));
     await tester.pumpAndSettle();
     final prefs = await SharedPreferences.getInstance();
@@ -500,11 +490,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Create demo account'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextFormField, 'Name'), 'Alex');
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Email'),
-      'a@example.com',
-    );
+    await tester.enterText(accountField('Name'), 'Alex');
+    await tester.enterText(accountField('Email'), 'a@example.com');
     await tester.tap(find.text('Create local profile'));
     await tester.pumpAndSettle();
     expect(
@@ -524,11 +511,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Create demo account'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextFormField, 'Name'), 'Alex');
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Email'),
-      'a@example.com',
-    );
+    await tester.enterText(accountField('Name'), 'Alex');
+    await tester.enterText(accountField('Email'), 'a@example.com');
     await tester.tap(find.text('Create local profile'));
     await tester.pumpAndSettle();
     expect(
@@ -588,10 +572,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Display name'),
-      'New',
-    );
+    await tester.enterText(accountField('Display name'), 'New');
     store.ready.complete();
     await tester.pumpAndSettle();
     expect(find.text('New'), findsOneWidget);
@@ -784,14 +765,8 @@ void main() {
     );
     await tester.tap(find.text('Service information'));
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Email'),
-      'a@example.com',
-    );
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Demo password'),
-      'demo',
-    );
+    await tester.enterText(accountField('Email'), 'a@example.com');
+    await tester.enterText(accountField('Demo password'), 'demo');
     await tester.tap(find.text('Continue in demo'));
     await tester.pumpAndSettle();
     expect(find.text('Service information'), findsOneWidget);

@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
 import 'package:http/http.dart' as http;
@@ -366,6 +367,9 @@ void main() {
       await tester.pumpWidget(app.ReportApp(client: _NoSubmissionClient()));
       await tester.pumpAndSettle();
       observed['initialDrafts'] = _homeResumeContinueButton().evaluate().length;
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('View saved reports'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('View saved reports'));
       await _waitFor(
         tester,
@@ -505,6 +509,9 @@ void main() {
       await tester.runAsync(() => testStore.saveReport(uncertain));
       await tester.pumpWidget(app.ReportApp(client: _NoSubmissionClient()));
       await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('View saved reports'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('View saved reports'));
       await _waitFor(
         tester,
@@ -522,7 +529,7 @@ void main() {
           .length;
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(app.ReportApp(client: _NoSubmissionClient()));
-      await tester.tap(find.text('Start a report'));
+      await _openFromCatalog(tester);
       await _waitFor(
         tester,
         () =>
@@ -608,6 +615,9 @@ void main() {
         }),
       );
       await tester.pumpWidget(app.ReportApp(client: client));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('View saved reports'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('View saved reports'));
       await _waitFor(
         tester,
@@ -669,6 +679,9 @@ void main() {
       observed['requestsBeforeRestart'] = requests.length;
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(app.ReportApp(client: client));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('View saved reports'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('View saved reports'));
       await _waitFor(
         tester,
@@ -741,7 +754,12 @@ void main() {
             .isNotEmpty,
       );
       observed['returnHeading'] = tester
-          .widget<Text>(find.text('Your reports'))
+          .widget<Text>(
+            find.descendant(
+              of: find.byType(AppBar),
+              matching: find.text('Your reports'),
+            ),
+          )
           .data;
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(app.ReportApp(client: client));
@@ -750,6 +768,9 @@ void main() {
           .text('Continue')
           .evaluate()
           .length;
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('View saved reports'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('View saved reports'));
       await _waitFor(
         tester,
@@ -781,6 +802,7 @@ void main() {
             'description': 'Synthetic corrected retained couch',
             'state': 'submitted',
             'serviceRequestNumber': 'SR-SYNTHETIC-DRAFT',
+            'contact': const ReportContact(anonymous: true).toJson(),
           },
           receipt.toJson(),
         ],
@@ -814,6 +836,9 @@ void main() {
       );
       await tester.runAsync(() => testStore.saveReport(report));
       await tester.pumpWidget(app.ReportApp(client: _NoSubmissionClient()));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('View saved reports'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('View saved reports'));
       await _waitFor(
         tester,
@@ -884,7 +909,8 @@ void main() {
   testWidgets('a failed Draft save warns and retains edits until saving recovers', (
     tester,
   ) async {
-    await _openReport(tester);
+    final tracking = _TrackingStore();
+    await _openReport(tester, store: tracking);
     await _openPhotos(tester, location);
     await tester.tap(find.text('Skip photo'));
     await tester.pumpAndSettle();
@@ -893,6 +919,16 @@ void main() {
       'Synthetic saved draft',
     );
     await tester.pumpAndSettle();
+    for (var turn = 0; turn < 1000; turn++) {
+      await tester.pump();
+      if (tracking.lastSaved?.description == 'Synthetic saved draft' &&
+          tracking.lastSaved?.step == 3) {
+        break;
+      }
+      await tester.runAsync(() => Future<void>(() {}));
+    }
+    expect(tracking.lastSaved?.description, 'Synthetic saved draft');
+    expect(tracking.lastSaved?.step, 3);
     final preferences = await SharedPreferences.getInstance();
     final data = await tester.runAsync(
       SharedPreferencesStorePlatform.instance.getAll,
@@ -904,7 +940,7 @@ void main() {
       find.byKey(const Key('report-description')),
       'Synthetic saved draft before failure',
     );
-    await tester.runAsync(() => store.delayedWritten.future);
+    await _waitForCompletion(tester, () => store.delayedWritten.isCompleted);
     final saved = (await tester.runAsync(
       store.getAll,
     ))!['flutter.report_draft_v1'];
@@ -913,6 +949,7 @@ void main() {
       find.byKey(const Key('report-description')),
       'Synthetic unsaved edit',
     );
+    store.finishDelayedWrite.complete();
     await _waitFor(
       tester,
       () => find
@@ -922,7 +959,6 @@ void main() {
           .evaluate()
           .isNotEmpty,
     );
-    store.finishDelayedWrite.complete();
     await tester.pumpAndSettle();
     expect(
       find.text(
@@ -957,7 +993,7 @@ void main() {
       find.byKey(const Key('report-description')),
       'Synthetic edit after storage exception',
     );
-    await tester.runAsync(() => store.attempted.future);
+    await _waitForCompletion(tester, () => store.attempted.isCompleted);
     await tester.pumpAndSettle();
     expect(
       find.text(
@@ -991,7 +1027,7 @@ void main() {
       find.byKey(const Key('report-description')),
       'Synthetic final unsaved edit',
     );
-    await tester.runAsync(() => store.attempted.future);
+    await _waitForCompletion(tester, () => store.attempted.isCompleted);
     await tester.pumpAndSettle();
     expect(
       find.text(
@@ -1070,9 +1106,12 @@ void main() {
     store.finishFailedWrite = Completer<void>();
     store.attempted = Completer<void>();
     await _continue(tester);
-    await tester.runAsync(() => store.attempted.future);
+    await _waitForCompletion(tester, () => store.attempted.isCompleted);
     expect(requests, isEmpty);
     await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
+    await tester.pump();
+    expect(requests, isEmpty);
+    store.finishFailedWrite!.complete();
     await _waitFor(
       tester,
       () => find.text('SR-SYNTHETIC-DRAFT').evaluate().isNotEmpty,
@@ -1089,7 +1128,6 @@ void main() {
       reports.single.description,
       'Synthetic receipt after local save failure',
     );
-    store.finishFailedWrite!.complete();
     await tester.pumpAndSettle();
     expect(
       find.text(
@@ -1165,7 +1203,10 @@ void main() {
       );
       await _continue(tester);
       expect(find.text('34.052235, -118.243683'), findsOneWidget);
-      expect(find.text('1 item · Curb'), findsOneWidget);
+      expect(
+        find.textContaining('1 × Loose/Miscellaneous Debris · Curb'),
+        findsOneWidget,
+      );
       expect(find.text('Photo attached'), findsOneWidget);
       await tester.tap(find.text('Edit Photo'));
       await tester.pumpAndSettle();
@@ -1184,7 +1225,10 @@ void main() {
       expect(find.text('34.060000, -118.250000'), findsOneWidget);
       await tester.tap(find.text('Edit Items'));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byKey(const Key('report-quantity')), '0');
+      await tester.enterText(
+        find.byKey(const Key('item-quantity-Loose/Miscellaneous Debris')),
+        '0',
+      );
       await tester.pump();
       expect(
         tester
@@ -1194,13 +1238,26 @@ void main() {
             .onPressed,
         isNull,
       );
-      await tester.enterText(find.byKey(const Key('report-quantity')), '4');
+      await tester.enterText(
+        find.byKey(const Key('item-quantity-Loose/Miscellaneous Debris')),
+        '4',
+      );
+      await tester.scrollUntilVisible(
+        find.byType(DropdownButtonFormField<String>),
+        150,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
       await tester.tap(find.byType(DropdownButtonFormField<String>));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Alley').last);
       await tester.pumpAndSettle();
       await _saveReviewEdit(tester);
-      expect(find.text('4 items · Alley'), findsOneWidget);
+      expect(
+        find.textContaining('4 × Loose/Miscellaneous Debris · Alley'),
+        findsOneWidget,
+      );
       await tester.tap(find.text('Edit Description'));
       await tester.pumpAndSettle();
       await tester.enterText(
@@ -1214,7 +1271,7 @@ void main() {
               find.widgetWithText(FilledButton, 'Save changes'),
             )
             .onPressed,
-        isNull,
+        isNotNull,
       );
       await tester.enterText(
         find.byKey(const Key('report-description')),
@@ -1314,7 +1371,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('reports-brand-logo')), findsOneWidget);
-    expect(find.text('Report illegal dumping.'), findsOneWidget);
+    expect(find.text('Report a problem.'), findsOneWidget);
     expect(find.text('Start a report'), findsOneWidget);
     expect(find.text('View saved reports'), findsOneWidget);
   });
@@ -1333,6 +1390,9 @@ void main() {
         ),
       );
       await tester.pumpWidget(app.ReportApp(client: _NoSubmissionClient()));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('View saved reports'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('View saved reports'));
       await _waitFor(
         tester,
@@ -1495,7 +1555,12 @@ void main() {
       await _continue(tester);
 
       expect(find.text('Looking good? Take a look.'), findsOneWidget);
-      expect(find.text('1 item · Curb'), findsOneWidget);
+      expect(
+        find.textContaining('1 × Loose/Miscellaneous Debris · Curb'),
+        findsOneWidget,
+      );
+      await tester.pageBack();
+      await tester.pumpAndSettle();
       await tester.pageBack();
       await tester.pumpAndSettle();
       expect(
@@ -1521,11 +1586,22 @@ void main() {
     await tester.tap(find.text('Use my location'));
     await tester.pumpAndSettle();
     await _continue(tester);
+    await _selectLooseItem(tester);
+    await tester.scrollUntilVisible(
+      find.byType(DropdownButtonFormField<String>),
+      150,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<String>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Curb').last);
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('report-quantity')), '1');
+    await tester.enterText(
+      find.byKey(const Key('item-quantity-Loose/Miscellaneous Debris')),
+      '1',
+    );
     tester.view.viewInsets = const FakeViewPadding(bottom: 300);
     await tester.pumpAndSettle();
 
@@ -1571,11 +1647,21 @@ void main() {
       await tester.pumpAndSettle();
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('item-quantity-Loose/Miscellaneous Debris')),
+        150,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(
+        find.byKey(const Key('item-quantity-Loose/Miscellaneous Debris')),
+      );
+      await tester.pumpAndSettle();
       expect(
         tester
-            .widget<TextField>(find.byKey(const Key('report-quantity')))
-            .controller!
-            .text,
+            .widget<TextFormField>(
+              find.byKey(const Key('item-quantity-Loose/Miscellaneous Debris')),
+            )
+            .initialValue,
         '1',
       );
       await tester.binding.handlePopRoute();
@@ -1583,6 +1669,10 @@ void main() {
       expect(find.text('Where did you spot it?'), findsOneWidget);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
+      await _waitFor(
+        tester,
+        () => find.text('Start a report').evaluate().isNotEmpty,
+      );
       expect(find.text('Start a report'), findsOneWidget);
     },
   );
@@ -1638,6 +1728,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await _waitFor(
+      tester,
+      () => find.text('Start a report').evaluate().isNotEmpty,
+    );
     expect(find.text('Start a report'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -1668,15 +1762,16 @@ void main() {
 Future<void> _openReport(
   WidgetTester tester, {
   SubmissionClient? client,
+  _TrackingStore? store,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = const Size(800, 2000);
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
-    app.ReportApp(client: client ?? _NoSubmissionClient()),
+    app.ReportApp(client: client ?? _NoSubmissionClient(), store: store),
   );
-  await tester.tap(find.text('Start a report'));
+  await _openFromCatalog(tester);
   await _waitFor(
     tester,
     () =>
@@ -1690,16 +1785,57 @@ Future<void> _openReport(
   );
 }
 
+Future<void> _openFromCatalog(WidgetTester tester) async {
+  await tester.runAsync(
+    () => rootBundle.loadString('assets/service_catalog.json'),
+  );
+  await tester.tap(find.text('Start a report'));
+  await tester.pumpAndSettle();
+  await tester.enterText(
+    find.widgetWithText(TextField, 'Search services'),
+    'Illegal Dumping',
+  );
+  await _waitFor(
+    tester,
+    () => find.text('Illegal Dumping Item Pickup').evaluate().isNotEmpty,
+  );
+  await tester.tap(find.text('Illegal Dumping Item Pickup'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Start report'));
+}
+
+Future<void> _selectLooseItem(WidgetTester tester) async {
+  await _waitFor(
+    tester,
+    () => find.text('Loose / miscellaneous debris').evaluate().isNotEmpty,
+  );
+  await tester.ensureVisible(find.text('Loose / miscellaneous debris'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Loose / miscellaneous debris'));
+  await tester.pumpAndSettle();
+}
+
 Future<void> _openPhotos(WidgetTester tester, _Location location) async {
   location.permission = LocationPermission.whileInUse;
   await tester.tap(find.text('Use my location'));
   await tester.pumpAndSettle();
   await _continue(tester);
+  await _selectLooseItem(tester);
+  await tester.scrollUntilVisible(
+    find.byType(DropdownButtonFormField<String>),
+    150,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.ensureVisible(find.byType(DropdownButtonFormField<String>));
+  await tester.pumpAndSettle();
   await tester.tap(find.byType(DropdownButtonFormField<String>));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Curb').last);
   await tester.pumpAndSettle();
-  await tester.enterText(find.byKey(const Key('report-quantity')), '1');
+  await tester.enterText(
+    find.byKey(const Key('item-quantity-Loose/Miscellaneous Debris')),
+    '1',
+  );
   await _continue(tester);
 }
 
@@ -1735,6 +1871,12 @@ Future<void> _continue(WidgetTester tester) async {
   await tester.pump();
   await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
   await tester.pumpAndSettle();
+  if (find.text('Without contact details').evaluate().isNotEmpty) {
+    await tester.tap(find.text('Without contact details'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
+    await tester.pumpAndSettle();
+  }
 }
 
 Future<void> _waitFor(
@@ -1750,6 +1892,17 @@ Future<void> _waitFor(
   });
   expect(ready(), isTrue);
   await tester.pumpAndSettle();
+}
+
+Future<void> _waitForCompletion(
+  WidgetTester tester,
+  bool Function() ready,
+) async {
+  for (var turn = 0; turn < 1000 && !ready(); turn++) {
+    await tester.pump();
+    await tester.runAsync(() => Future<void>(() {}));
+  }
+  expect(ready(), isTrue);
 }
 
 class _Camera extends ImagePickerPlatform {
@@ -1875,12 +2028,72 @@ http.Response _syntheticPortalReply(http.Request request) {
         'sCasePriority': 'Normal',
         'sCaseDefaultStatus': 'New',
         'lstCaseQuestion': [
-          for (final field in [
-            'Description',
-            'Location_of_Loose_Miscellaneous_Debris__c',
-            'No_of_Loose_Miscellaneous_Debris__c',
-          ])
-            {'sFieldtoUpdate': field},
+          {
+            'sQuestionId': 'residential',
+            'sFieldtoUpdate': 'Residential_Commercial__c',
+            'sQuestionType': 'Picklist',
+            'sParentQuestionId': null,
+            'sParentAnswer': '',
+            'sAnswer': 'Residential',
+            'sDefaultValue': 'Residential',
+            'sReadOnly': true,
+            'sHidden': true,
+          },
+          {
+            'sQuestionId': 'suspect',
+            'sFieldtoUpdate': 'Provide_Information_On_Suspect__c',
+            'sQuestionType': 'Picklist',
+            'sParentQuestionId': null,
+            'sParentAnswer': '',
+            'lstOptions': [
+              {'value': 'No'},
+            ],
+          },
+          {
+            'sQuestionId': 'family',
+            'sFieldtoUpdate': 'Illegally_Dumped_Item_Type__c',
+            'sQuestionType': 'Picklist',
+            'sParentQuestionId': 'suspect',
+            'sParentAnswer': 'Yes;No',
+            'lstOptions': [
+              {'value': "I'm not sure"},
+            ],
+          },
+          {
+            'sQuestionId': 'selection',
+            'sFieldtoUpdate': 'Illegally_Dumped_Pickup_Options__c',
+            'sQuestionType': 'MultiPicklist',
+            'sParentQuestionId': 'family',
+            'sParentAnswer': "I'm not sure",
+            'lstOptions': [
+              {'value': 'Loose/Miscellaneous Debris'},
+            ],
+          },
+          {
+            'sQuestionId': 'placement',
+            'sFieldtoUpdate': 'Location_of_Loose_Miscellaneous_Debris__c',
+            'sQuestionType': 'Picklist',
+            'sParentQuestionId': 'selection',
+            'sParentAnswer': 'Loose/Miscellaneous Debris',
+            'lstOptions': [
+              {'value': 'Curb'},
+              {'value': 'Alley'},
+            ],
+          },
+          {
+            'sQuestionId': 'quantity',
+            'sFieldtoUpdate': 'No_of_Loose_Miscellaneous_Debris__c',
+            'sQuestionType': 'NumberIncrement',
+            'sParentQuestionId': 'selection',
+            'sParentAnswer': 'Loose/Miscellaneous Debris',
+          },
+          {
+            'sQuestionId': 'description',
+            'sFieldtoUpdate': 'Description',
+            'sQuestionType': 'TextArea',
+            'sParentQuestionId': null,
+            'sParentAnswer': '',
+          },
         ],
       },
       'contactWrapperResponse': {'bIsLogin': false},
@@ -1930,5 +2143,14 @@ class _RemovalStore extends InMemorySharedPreferencesStore {
   Future<bool> remove(String key) async {
     if (key == 'flutter.report_draft_v1' && failRemoval) return false;
     return super.remove(key);
+  }
+}
+
+class _TrackingStore extends LocalReportStore {
+  ReportDraft? lastSaved;
+  @override
+  Future<void> saveDraft(ReportDraft draft) async {
+    await super.saveDraft(draft);
+    lastSaved = draft;
   }
 }

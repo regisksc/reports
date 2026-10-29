@@ -205,16 +205,6 @@ class _SettingsPageState extends State<SettingsPage> {
       child: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Text(
-            'Make yourself comfortable',
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-          Text(
-            widget.showDemoUpdates ? 'Preferences' : 'Settings',
-            style: Theme.of(context).textTheme.headlineLarge,
-          ),
-          const Text('A few choices for this device.'),
-          const SizedBox(height: 20),
           if (!widget.showDemoUpdates)
             Card(
               child: Padding(
@@ -237,12 +227,29 @@ class _SettingsPageState extends State<SettingsPage> {
                           onClearLocalData: widget.onClearLocalData,
                         ),
                       ),
-                      child: const Text('Account'),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Account'),
+                          SizedBox(width: 8),
+                          Icon(Icons.arrow_forward),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
+          Text(
+            'Make yourself comfortable',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          Text(
+            widget.showDemoUpdates ? 'Preferences' : 'Settings',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const Text('A few choices for this device.'),
+          const SizedBox(height: 20),
           if (widget.showDemoUpdates)
             Card(
               child: ListTile(
@@ -328,12 +335,26 @@ class _SettingsPageState extends State<SettingsPage> {
                   TextButton(
                     onPressed: () =>
                         _open(const HelpPage(initialArticle: 'permissions')),
-                    child: const Text('About permissions'),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(child: Text('About permissions')),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward),
+                      ],
+                    ),
                   ),
                   TextButton(
                     onPressed: () =>
                         _open(const HelpPage(initialArticle: 'privacy')),
-                    child: const Text('How local information is kept'),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(child: Text('How local information is kept')),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward),
+                      ],
+                    ),
                   ),
                 ],
               ),

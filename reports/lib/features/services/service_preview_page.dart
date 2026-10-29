@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../design/reports_design.dart';
 import '../account/account_page.dart';
 import '../report/data/remembered_contact_store.dart';
 import '../report/domain/report.dart';
@@ -159,15 +160,111 @@ class _ServicePreviewPageState extends State<ServicePreviewPage> {
     if (problem.isEmpty) save();
   }
 
-  Widget input(String label, String initial, ValueChanged<String> update) =>
-      TextFormField(
-        initialValue: initial,
-        decoration: InputDecoration(labelText: label),
-        onChanged: (value) {
-          update(value);
-          save();
-        },
+  Widget input(
+    String label,
+    String initial,
+    ValueChanged<String> update, {
+    int maxLines = 1,
+  }) => TextFormField(
+    initialValue: initial,
+    maxLines: maxLines,
+    decoration: InputDecoration(labelText: label),
+    onChanged: (value) {
+      update(value);
+      save();
+    },
+  );
+
+  void backStep() {
+    setState(() {
+      step--;
+      error = '';
+    });
+    save();
+  }
+
+  Widget heading(String text) =>
+      Text(text, style: Theme.of(context).textTheme.headlineMedium);
+
+  Widget contactChoice({required bool anonymous}) {
+    final selected = (contactRequired && !anonymous) || named == !anonymous;
+    final border = selected ? ReportsStyle.orangeDark : ReportsStyle.border;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? const Color(0xfffff1d9) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            setState(() => named = !anonymous);
+            save();
+          },
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 160),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: selected ? const Color(0xfffff1d9) : Colors.white,
+              border: Border.all(color: border, width: 2),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(color: border, offset: const Offset(0, 3))],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      anonymous ? Icons.shield_outlined : Icons.mail_outline,
+                    ),
+                    const Spacer(),
+                    Icon(selected ? Icons.check_circle : Icons.circle_outlined),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  anonymous ? 'Anonymous' : 'Provide contact details',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  anonymous
+                      ? 'Keep your name and email out of this preview.'
+                      : 'Add contact details to this local preview.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget contactChoices() => LayoutBuilder(
+    builder: (context, constraints) {
+      if (contactRequired) return contactChoice(anonymous: false);
+      if (constraints.maxWidth < 300 ||
+          MediaQuery.textScalerOf(context).scale(1) > 1.3) {
+        return Column(
+          children: [
+            contactChoice(anonymous: true),
+            const SizedBox(height: 12),
+            contactChoice(anonymous: false),
+          ],
+        );
+      }
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: contactChoice(anonymous: true)),
+          const SizedBox(width: 12),
+          Expanded(child: contactChoice(anonymous: false)),
+        ],
       );
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +272,7 @@ class _ServicePreviewPageState extends State<ServicePreviewPage> {
     final content = <Widget>[
       if (step == -1) ...[
         const Text('Service information'),
-        Text(title, style: Theme.of(context).textTheme.headlineMedium),
+        heading(title),
         Text(widget.service['group'] as String),
         Card(
           child: Padding(
@@ -183,7 +280,10 @@ class _ServicePreviewPageState extends State<ServicePreviewPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Before you start'),
+                Text(
+                  'Before you start',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 Text(
                   accountRequired
                       ? 'A City account is required to request this service.'
@@ -234,8 +334,11 @@ class _ServicePreviewPageState extends State<ServicePreviewPage> {
         ),
       ],
       if (step == 0) ...[
-        Text(title, style: Theme.of(context).textTheme.headlineMedium),
-        const Text('Example questions'),
+        heading(title),
+        Text(
+          'Example questions',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const Text(
           'These example questions illustrate the design. The live service may ask for more details.',
         ),
@@ -243,12 +346,23 @@ class _ServicePreviewPageState extends State<ServicePreviewPage> {
           'What needs attention?',
           description,
           (value) => description = value,
+          maxLines: 4,
         ),
       ],
       if (step == 1) ...[
-        const Text('Place it on the map.'),
+        heading('Place it on the map.'),
         const Text(
           'Use an address or intersection. This sample pin stays in the preview.',
+        ),
+        Card(
+          color: ReportsStyle.surface,
+          child: Semantics(
+            label: 'Illustrative location pin, not a live map',
+            child: const SizedBox(
+              height: 150,
+              child: Center(child: Icon(Icons.location_on_outlined, size: 48)),
+            ),
+          ),
         ),
         input('Address or intersection', address, (value) {
           address = value;
@@ -263,50 +377,63 @@ class _ServicePreviewPageState extends State<ServicePreviewPage> {
         ),
       ],
       if (step == 2) ...[
-        const Text('A little more context.'),
-        Text(
-          noPhotos
-              ? 'No photos are needed for this service.'
-              : 'Sample evidence previews the design only. No photo is uploaded.',
+        heading('A little more context.'),
+        Card(
+          color: ReportsStyle.surface,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                const Icon(Icons.camera_alt_outlined, size: 40),
+                const SizedBox(height: 16),
+                Text(
+                  noPhotos
+                      ? 'No photos are needed for this service.'
+                      : evidence.contains('required attachments')
+                      ? 'Photos are required for this service.'
+                      : evidence.contains('optional attachments')
+                      ? 'Photos are optional for this service.'
+                      : 'Photo requirements are not confirmed.',
+                  textAlign: TextAlign.center,
+                ),
+                if (!noPhotos)
+                  const Text(
+                    'Sample evidence previews the design only. No photo is uploaded.',
+                    textAlign: TextAlign.center,
+                  ),
+                if (!noPhotos) ...[
+                  const SizedBox(height: 16),
+                  OutlinedButton(
+                    onPressed: photoLimit != null && photos >= photoLimit!
+                        ? null
+                        : () {
+                            setState(() => photos++);
+                            save();
+                          },
+                    child: const Text('Add sample evidence'),
+                  ),
+                ],
+                if (photos > 0) ...[
+                  Text('$photos sample evidence'),
+                  TextButton(
+                    onPressed: () {
+                      setState(() => photos--);
+                      save();
+                    },
+                    child: const Text('Remove sample evidence'),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
-        if (!noPhotos)
-          OutlinedButton(
-            onPressed: photoLimit != null && photos >= photoLimit!
-                ? null
-                : () {
-                    setState(() => photos++);
-                    save();
-                  },
-            child: const Text('Add sample evidence'),
-          ),
-        if (photos > 0) ...[
-          Text('$photos sample evidence'),
-          TextButton(
-            onPressed: () {
-              setState(() => photos--);
-              save();
-            },
-            child: const Text('Remove sample evidence'),
-          ),
-        ],
       ],
       if (step == 3) ...[
-        const Text('Contact'),
-        if (!contactRequired)
-          OutlinedButton(
-            onPressed: () {
-              setState(() => named = false);
-              save();
-            },
-            child: const Text('Anonymous'),
-          ),
-        OutlinedButton(
-          onPressed: () {
-            setState(() => named = true);
-            save();
-          },
-          child: const Text('Provide contact details'),
+        heading('Contact'),
+        const Text(
+          'Choose how to provide contact information for this local preview.',
         ),
+        contactChoices(),
         if ((named == true || contactRequired) && !contactLoaded)
           const CircularProgressIndicator()
         else if (named == true || contactRequired) ...[
@@ -322,85 +449,173 @@ class _ServicePreviewPageState extends State<ServicePreviewPage> {
         ],
       ],
       if (step == 4) ...[
-        const Text('Review'),
-        Text(description),
-        Text(address),
+        heading('Review'),
         const Text('This preview is local and will not be sent to the City.'),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Details', style: Theme.of(context).textTheme.titleMedium),
+                Text(description),
+                const SizedBox(height: 16),
+                Text(
+                  'Location',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                Text(address),
+                const SizedBox(height: 16),
+                Text('Photos', style: Theme.of(context).textTheme.titleMedium),
+                Text('$photos sample evidence'),
+                const SizedBox(height: 16),
+                Text('Contact', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  named == true || contactRequired
+                      ? '$firstName $lastName · $email${phone.isEmpty ? '' : ' · $phone'}'
+                      : 'Anonymous',
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
       if (step == 5) ...[
-        const Text('Local receipt'),
-        const Text('Local lookup ID'),
-        Text(id),
-        const Text('This preview was not sent to the City.'),
-        Text(title),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.check_circle_outline,
+                  size: 44,
+                  color: Color(0xff18703a),
+                ),
+                const SizedBox(height: 16),
+                heading('Local receipt'),
+                const SizedBox(height: 12),
+                const Text('Local lookup ID'),
+                Text(id, style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 12),
+                const Text('This preview was not sent to the City.'),
+                Text(title),
+              ],
+            ),
+          ),
+        ),
       ],
       if (error.isNotEmpty) Text(error),
       if (!stored)
         const Text(
           'Local saving is unavailable. Your preview remains in this session.',
         ),
-      if (step > 0 && step < 5)
-        TextButton(
-          onPressed: () {
-            setState(() {
-              step--;
-              error = '';
-            });
-            save();
-          },
-          child: const Text('Back step'),
-        ),
-      if (step >= 0 && step < 5)
-        FilledButton(
-          onPressed: advance,
-          child: Text(step == 4 ? 'Create local receipt' : 'Continue'),
-        ),
     ];
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New report'),
+        leading: step > 0 && step < 5 ? BackButton(onPressed: backStep) : null,
+        title: Text(step < 0 ? 'Services' : 'New report'),
         actions: [
-          TextButton(
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              final saved = step < 0 || await save();
-              if (!context.mounted) return;
-              Navigator.pop(context);
-              if (!saved) {
-                messenger.showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Preview could not be saved. It remains in this session.',
+          if (step >= 0)
+            TextButton(
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final saved = await save();
+                if (!context.mounted) return;
+                Navigator.pop(context);
+                if (!saved) {
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Preview could not be saved. It remains in this session.',
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Save and close'),
+            ),
+        ],
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              children: [
+                if (step >= 0) ...[
+                  Text(
+                    'Step ${step + 1} of 6 · ${['Details', 'Location', 'Photos', 'Contact', 'Review', 'Receipt'][step]}',
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  const SizedBox(height: 10),
+                  LinearProgressIndicator(
+                    value: (step + 1) / 6,
+                    minHeight: 10,
+                    borderRadius: BorderRadius.circular(10),
+                    semanticsLabel: 'Report progress',
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    [
+                      'DETAILS',
+                      'LOCATION',
+                      'PHOTOS',
+                      'CONTACT',
+                      'REVIEW',
+                      'RECEIPT',
+                    ][step],
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
+                      color: ReportsStyle.muted,
                     ),
                   ),
-                );
-              }
-            },
-            child: const Text('Save and close'),
+                  const SizedBox(height: 10),
+                ],
+                KeyedSubtree(
+                  key: Key('preview-section-$step'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final child in content)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: child,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          if (step >= 0) ...[
-            Text(
-              'Step ${step + 1} of 6 · ${['Details', 'Location', 'Photos', 'Contact', 'Review', 'Receipt'][step]}',
-              style: Theme.of(context).textTheme.labelMedium,
-            ),
-            const SizedBox(height: 10),
-            LinearProgressIndicator(
-              value: (step + 1) / 6,
-              minHeight: 10,
-              borderRadius: BorderRadius.circular(10),
-              semanticsLabel: 'Report progress',
-            ),
-            const SizedBox(height: 28),
-          ],
-          for (final child in content)
-            Padding(padding: const EdgeInsets.only(bottom: 16), child: child),
-        ],
-      ),
+      bottomNavigationBar: step >= 0 && step < 5
+          ? SafeArea(
+              top: false,
+              child: Container(
+                key: const Key('preview-action-footer'),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  13,
+                  20,
+                  12 + MediaQuery.viewInsetsOf(context).bottom,
+                ),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    top: BorderSide(color: ReportsStyle.border, width: 2),
+                  ),
+                ),
+                child: FilledButton(
+                  onPressed: advance,
+                  child: Text(step == 4 ? 'Create local receipt' : 'Continue'),
+                ),
+              ),
+            )
+          : null,
     );
   }
 }

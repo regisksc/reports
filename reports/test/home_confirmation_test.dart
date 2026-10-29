@@ -80,14 +80,13 @@ void main() {
           () => _homeResumeContinueButton().evaluate().isNotEmpty,
         );
         if (reduced) {
-          await tester.tap(find.byTooltip('Motion settings'));
+          await tester.tap(find.byTooltip('Settings'));
           await tester.pumpAndSettle();
           await tester.tap(
-            find.widgetWithText(
-              CheckedPopupMenuItem<bool>,
-              'Reduce motion for this session',
-            ),
+            find.widgetWithText(SwitchListTile, 'Reduce motion'),
           );
+          await tester.pumpAndSettle();
+          await tester.pageBack();
           await tester.pumpAndSettle();
         }
         observed['effectiveReduced'] = MediaQuery.disableAnimationsOf(

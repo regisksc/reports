@@ -63,9 +63,12 @@ Until step 2 exists, report Submission as **unverified**. A green
 
 ## App state
 
-- The shipped entry point uses PortalSubmissionClient for anonymous illegal
-  dumping, with optional photo, GPS, required debris answers, and description.
-  No category picker, browser handoff, or clipboard handoff remains.
+- The shipped entry point opens a native service catalog. Illegal dumping uses
+  PortalSubmissionClient with photos, map search/GPS, required debris answers,
+  description and an explicit anonymous or named contact choice.
+- Other service flows, account access and Nearby are local previews. They do
+  not authenticate with the City or submit requests. No browser or clipboard
+  handoff remains.
 - Reports use the `reports_v2` shared_preferences shape. Preserve existing
   submitted rows and SR numbers when extending submission state.
 - Ticket 07 covers interrupted-send recovery and duplicate prevention;

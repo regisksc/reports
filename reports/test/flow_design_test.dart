@@ -23,7 +23,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Where did you spot it?'), findsOneWidget);
-      expect(find.text('Step 1 of 5 · Location'), findsOneWidget);
+      expect(find.text('Step 1 of 6 · Location'), findsOneWidget);
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
       expect(
         tester

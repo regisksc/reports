@@ -74,10 +74,10 @@ void main() {
 
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
-      expect(find.text('Report illegal dumping'), findsOneWidget);
+      expect(find.text('New report'), findsOneWidget);
       expect(find.byTooltip('Discard draft'), findsOneWidget);
       final retained = await tester.runAsync(testStore.loadDraft);
-      expect(retained?.toJson(), draft.toJson());
+      expect(retained?.toJson(), ReportDraft.fromJson(draft.toJson()).toJson());
     },
   );
 

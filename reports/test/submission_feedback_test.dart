@@ -46,6 +46,7 @@ void main() {
       final originalBytes = await tester.runAsync(marker.readAsBytes);
       final draft = ReportDraft(
         createdAt: DateTime(2026, 10, 23, 12),
+        flowVersion: 1,
         description: 'Synthetic different report',
         latitude: 34.06,
         longitude: -118.25,
@@ -95,6 +96,10 @@ void main() {
         );
         await tester.pumpAndSettle();
       }
+      await tester.tap(find.text('Without contact details'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
+      await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
       await _until(
         tester,
@@ -130,6 +135,7 @@ void main() {
         addTearDown(tester.view.resetDevicePixelRatio);
         final draft = ReportDraft(
           createdAt: DateTime(2026, 10, 22, 12),
+          flowVersion: 1,
           description: List.filled(
             25,
             'Synthetic offline description.',
@@ -212,7 +218,7 @@ void main() {
           'startedScrolled': startedScrolled,
           'warningVisible': warningVisible,
           'detailVisible': detailVisible,
-          'step': find.textContaining('Step 5 of 5').evaluate().isNotEmpty,
+          'step': find.textContaining('Step 6 of 6').evaluate().isNotEmpty,
           'submit': find
               .widgetWithText(FilledButton, 'Submit')
               .evaluate()

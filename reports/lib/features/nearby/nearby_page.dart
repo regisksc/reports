@@ -159,7 +159,11 @@ class _NearbyPageState extends State<NearbyPage> {
         padding: const EdgeInsets.only(bottom: 16),
         child: TextField(
           controller: controller,
-          decoration: InputDecoration(labelText: label, hintText: hint),
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: hint,
+            floatingLabelBehavior: FloatingLabelBehavior.always,
+          ),
         ),
       );
 
@@ -192,10 +196,7 @@ class _NearbyPageState extends State<NearbyPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Nearby reports',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+            Text('Nearby', style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 8),
             const Text('Explore how nearby requests could be filtered.'),
             const SizedBox(height: 12),
@@ -210,7 +211,7 @@ class _NearbyPageState extends State<NearbyPage> {
               ),
             ),
             const SizedBox(height: 20),
-            _field('Area or address', _area, 'Enter an area or address'),
+            _field('Search an area', _area, 'Street or neighborhood'),
             _dateField('Start date', _start, true),
             _dateField('End date', _end, false),
             DropdownButtonFormField<String>(

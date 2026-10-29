@@ -4,9 +4,7 @@ import 'package:reports/features/services/service_catalog_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('creates a local preview receipt', (
-    tester,
-  ) async {
+  testWidgets('creates a local preview receipt', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(
       MaterialApp(home: ServiceCatalogPage(onIllegalDumping: () {})),
@@ -25,6 +23,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Place it on the map.'), findsOneWidget);
     await tester.enterText(find.byType(TextField).first, 'Main Street');
+    await tester.ensureVisible(find.text('Confirm sample pin'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Confirm sample pin'));
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();

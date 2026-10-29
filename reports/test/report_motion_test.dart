@@ -62,19 +62,18 @@ void main() {
           () => _homeResumeContinueButton().evaluate().isNotEmpty,
         );
         if (mode == 'session') {
-          await tester.tap(find.byTooltip('Motion settings'));
+          await tester.tap(find.byTooltip('Settings'));
           await tester.pumpAndSettle();
           await tester.tap(
-            find.widgetWithText(
-              CheckedPopupMenuItem<bool>,
-              'Reduce motion for this session',
-            ),
+            find.widgetWithText(SwitchListTile, 'Reduce motion'),
           );
+          await tester.pumpAndSettle();
+          await tester.pageBack();
           await tester.pumpAndSettle();
         }
         await tester.ensureVisible(_homeResumeContinueButton());
         await tester.pumpAndSettle();
-        final hero = tester.getRect(find.text('Report illegal dumping.'));
+        final hero = tester.getRect(find.text('Report a problem.'));
         final movements = <Object>[];
         Future<void> change(Finder action, Finder arriving) async {
           await tester.pumpAndSettle();
@@ -94,10 +93,7 @@ void main() {
           });
         }
 
-        await change(
-          _homeResumeContinueButton(),
-          find.text('Report illegal dumping'),
-        );
+        await change(_homeResumeContinueButton(), find.text('New report'));
         await _waitFor(
           tester,
           () =>
@@ -112,12 +108,18 @@ void main() {
         );
         await change(
           find.text('Skip photo'),
-          find.text('Describe the dumped items'),
+          find.text('Describe the dumped items (optional)'),
         );
         await tester.enterText(
           find.byKey(const Key('report-description')),
           'Synthetic motion check: couch beside the curb.',
         );
+        await change(
+          find.text('Continue'),
+          find.text('Without contact details'),
+        );
+        await tester.tap(find.text('Without contact details'));
+        await tester.pumpAndSettle();
         await change(find.text('Continue'), find.text('Edit Location'));
         final review = [
           for (final text in [
@@ -139,14 +141,14 @@ void main() {
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
         expect(find.text('Edit Items'), findsOneWidget);
-        for (var step = 0; step < 4; step++) {
+        for (var step = 0; step < 5; step++) {
           await tester.tap(find.byType(BackButton));
           await tester.pumpAndSettle();
         }
         await tester.tap(find.byType(BackButton));
         await tester.pump();
         final returningHero = find.text(
-          'Report illegal dumping.',
+          'Report a problem.',
           skipOffstage: false,
         );
         final returningGeometry = [tester.getRect(returningHero)];
@@ -170,7 +172,7 @@ void main() {
           {
             'mode': mode,
             'movements': [
-              for (var change = 0; change < 5; change++)
+              for (var change = 0; change < 6; change++)
                 {
                   'verticalTravel': mode == 'normal'
                       ? [

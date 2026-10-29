@@ -512,6 +512,29 @@ Rules found in the config:
   Sub_Type__c`, `Marking__c`) appear only for a parent answer that this
   flow never produced; leave them empty.
 
+A read-only inspection on 2026-10-28 confirmed 95 selectable items. The
+native catalog in `reports/assets/illegal_dumping_items.json` retains each
+item's exact location and quantity field names. Do not derive these names
+from labels: for example, `Bed Frame (Wood)` uses
+`No_of_Bedframe_Wood__c`.
+
+| Item family | Selection field | Items |
+| --- | --- | --- |
+| Bulky Items | `Illegally_Dumped_Other_Item_Options__c` | 40 |
+| Electronic Waste | `Electronic_Waste_Options__c` | 7 |
+| Metal/Household Appliances | `Metal_Household_Appliances_Options__c` | 28 |
+| I'm not sure | `Illegally_Dumped_Pickup_Options__c` | 20 |
+
+For newly selected items, the native client checks the current question types,
+options and parent chain before sending. `sParentQuestionId` points to the
+parent's `sQuestionId`, not `sQuestionConfigId`. Answers bind to the verified
+question IDs so repeated field names on inactive branches stay unanswered.
+Older drafts without item metadata retain their original debris/count mapping.
+
+This inspection called only `GET /s/`, `fetchInitialDetails` and
+`fetchCaseTypeDetails`. It did not submit a request or resolve the historical
+acceptance-evidence gap.
+
 ## Required fields (what the Portal enforces)
 
 - Contact step: **Request Anonymously** must be chosen (`Yes` or `No`).

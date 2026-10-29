@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as image;
 
 import 'package:reports/features/report/domain/report.dart';
+import 'package:reports/features/report/domain/illegal_dumping_catalog.dart';
 
 part 'portal_aura_session.dart';
 part 'portal_payload_builder.dart';
@@ -74,6 +75,7 @@ class PortalSubmissionClient implements SubmissionClient {
   }
 
   Future<SubmissionResult> _submit(http.Client client, Report report) async {
+    final itemCatalog = await _validatedItemCatalog(report);
     final photoLinks = await _validatedPhotos(report);
 
     final portal = await _PortalSession.open(client);
@@ -97,6 +99,7 @@ class PortalSubmissionClient implements SubmissionClient {
         lookup.address,
         lookup.status,
         photoLinks,
+        itemCatalog,
       ),
       issuePage,
     );
@@ -115,6 +118,7 @@ class PortalSubmissionClient implements SubmissionClient {
     required String addressStatus,
   }) async {
     try {
+      final itemCatalog = await _validatedItemCatalog(report);
       final photos = await _validatedPhotos(report);
       final params = _preparedParams(
         report,
@@ -123,6 +127,7 @@ class PortalSubmissionClient implements SubmissionClient {
         Map<String, dynamic>.from(address),
         addressStatus,
         photos,
+        itemCatalog,
       );
       return PortalPreparedSubmission._(
         report: report,
@@ -177,6 +182,26 @@ class PortalSubmissionClient implements SubmissionClient {
   }
 }
 
+Future<IllegalDumpingCatalog?> _validatedItemCatalog(Report report) async {
+  if (report.itemFamily == null && report.items.isEmpty) return null;
+  try {
+    final catalog = await IllegalDumpingCatalog.load();
+    if (report.itemFamily != null &&
+        catalog.validSelection(report.itemFamily!, report.items)) {
+      return catalog;
+    }
+  } on Object {
+    throw const _Failure(
+      SubmissionFailureKind.rejected,
+      'Item choices could not be verified. No request was sent.',
+    );
+  }
+  throw const _Failure(
+    SubmissionFailureKind.rejected,
+    'Check item choices, locations and quantities. No request was sent.',
+  );
+}
+
 void _log(String line) {
   if (kDebugMode) debugPrint(_redact(line));
 }
@@ -205,6 +230,7 @@ Map<String, Object?> _logView(Map<String, Object?> params) {
   );
   return {
     ...params,
+    'sObjContact': '<redacted>',
     'sCaseQuestionJSON':
         '${questions.length} questions; answered: ${answered.join(', ')}',
     'sFileLinks': '<${photos.length} files, $bytes bytes>',

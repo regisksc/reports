@@ -78,10 +78,19 @@ void main() {
         'longitude': -118.243683,
         'createdAt': pending.single.createdAt.toIso8601String(),
         'photoPath': null,
-        'debrisLocation': 'Curb',
-        'quantity': 3,
+        'debrisLocation': null,
+        'quantity': null,
+        'itemFamily': "I'm not sure",
+        'items': [
+          const ReportItem(
+            name: 'Loose/Miscellaneous Debris',
+            quantity: '3',
+            location: 'Curb',
+          ).toJson(),
+        ],
         'state': 'submitted',
         'serviceRequestNumber': 'SR-NATIVE-1',
+        'contact': const ReportContact(anonymous: true).toJson(),
       });
     },
   );
@@ -106,7 +115,11 @@ void main() {
         expect(before!.single.state, ReportState.notSent);
         await tester.tap(find.text('Edit Items'));
         await tester.pumpAndSettle();
-        await tester.enterText(find.byKey(const Key('report-quantity')), '4');
+        final quantity = find.byKey(
+          const Key('item-quantity-Loose/Miscellaneous Debris'),
+        );
+        await tester.ensureVisible(quantity);
+        await tester.enterText(quantity, '4');
         await tester.tap(find.widgetWithText(FilledButton, 'Save changes'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Edit Description'));
@@ -126,7 +139,7 @@ void main() {
         final after = await tester.runAsync(testStore.loadReports);
         expect(after!.single.createdAt, before.single.createdAt);
         expect(after.single.description, 'Corrected couch location');
-        expect(after.single.quantity, 4);
+        expect(after.single.items.single.quantity, '4');
         expect(after.single.state, ReportState.submitted);
         expect(after.single.serviceRequestNumber, 'SR-CORRECTED');
       },
@@ -165,7 +178,7 @@ void main() {
       expect(stored!.single.state, ReportState.submissionUncertain);
       await tester.pageBack();
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Start a report'));
+      await _openFromCatalog(tester);
       await _waitFor(
         tester,
         () =>
@@ -294,8 +307,11 @@ Future<void> _openReport(WidgetTester tester, SubmissionClient client) async {
   tester.view.physicalSize = const Size(800, 2000);
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.runAsync(
+    () => rootBundle.loadString('assets/service_catalog.json'),
+  );
   await tester.pumpWidget(ReportApp(client: client));
-  await tester.tap(find.text('Start a report'));
+  await _openFromCatalog(tester);
   await _waitFor(
     tester,
     () =>
@@ -311,15 +327,46 @@ Future<void> _openReport(WidgetTester tester, SubmissionClient client) async {
   );
 }
 
+Future<void> _openFromCatalog(WidgetTester tester) async {
+  await tester.tap(find.text('Start a report'));
+  await tester.pumpAndSettle();
+  await tester.enterText(
+    find.widgetWithText(TextField, 'Search services'),
+    'Illegal Dumping',
+  );
+  await _waitFor(
+    tester,
+    () => find.text('Illegal Dumping Item Pickup').evaluate().isNotEmpty,
+  );
+  await tester.tap(find.text('Illegal Dumping Item Pickup'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Start report'));
+}
+
 Future<void> _fillReport(WidgetTester tester) async {
   await tester.tap(find.text('Use my location'));
   await tester.pumpAndSettle();
   await _continue(tester);
-  await tester.tap(find.byType(DropdownButtonFormField<String>));
+  final item = find.text('Loose / miscellaneous debris');
+  await _waitFor(tester, () => item.evaluate().isNotEmpty);
+  await tester.ensureVisible(item);
+  await tester.pumpAndSettle();
+  await tester.tap(item);
+  await tester.pumpAndSettle();
+  final location = find.byKey(
+    const Key('item-location-Loose/Miscellaneous Debris'),
+  );
+  await tester.ensureVisible(location);
+  await tester.pumpAndSettle();
+  await tester.tap(location);
   await tester.pumpAndSettle();
   await tester.tap(find.text('Curb').last);
   await tester.pumpAndSettle();
-  await tester.enterText(find.byKey(const Key('report-quantity')), '3');
+  final quantity = find.byKey(
+    const Key('item-quantity-Loose/Miscellaneous Debris'),
+  );
+  await tester.ensureVisible(quantity);
+  await tester.enterText(quantity, '3');
   await _continue(tester);
   await tester.tap(find.text('Skip photo'));
   await tester.pumpAndSettle();
@@ -327,6 +374,9 @@ Future<void> _fillReport(WidgetTester tester) async {
     find.byKey(const Key('report-description')),
     'Couch and mattress on sidewalk',
   );
+  await _continue(tester);
+  await tester.tap(find.text('Without contact details'));
+  await tester.pumpAndSettle();
   await _continue(tester);
 }
 

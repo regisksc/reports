@@ -1,0 +1,504 @@
+{
+  "verifiedOn": "2026-10-28",
+  "families": [
+    {
+      "name": "Bulky Items",
+      "selectionField": "Illegally_Dumped_Other_Item_Options__c",
+      "items": [
+        {
+          "name": "Basketball Set",
+          "locationField": "Location_of_Basketball_Set__c",
+          "quantityField": "No_of_Basketball_Set__c"
+        },
+        {
+          "name": "Bed Frame (Wood)",
+          "locationField": "Location_of_Bed_Frame_Wood__c",
+          "quantityField": "No_of_Bedframe_Wood__c"
+        },
+        {
+          "name": "Bookcase (Wood)",
+          "locationField": "Location_of_Bookcase_Wood__c",
+          "quantityField": "No_of_Bookcase_Wood__c"
+        },
+        {
+          "name": "Box Spring",
+          "locationField": "Location_of_Box_Spring__c",
+          "quantityField": "No_of_Box_Spring__c"
+        },
+        {
+          "name": "Cabinet",
+          "locationField": "Location_of_Cabinet__c",
+          "quantityField": "No_of_Cabinet__c"
+        },
+        {
+          "name": "Carpet",
+          "locationField": "Location_of_Carpet__c",
+          "quantityField": "No_of_Carpet__c"
+        },
+        {
+          "name": "Chair",
+          "locationField": "Location_of_Chair__c",
+          "quantityField": "No_of_Chair__c"
+        },
+        {
+          "name": "Christmas Tree",
+          "locationField": "Location_of_Christmas_Tree__c",
+          "quantityField": "No_of_Christmas_Tree__c"
+        },
+        {
+          "name": "Crib",
+          "locationField": "Location_of_Crib__c",
+          "quantityField": "No_of_Crib__c"
+        },
+        {
+          "name": "Desk (Wood)",
+          "locationField": "Location_of_Desk_Wood__c",
+          "quantityField": "No_of_Desk_Wood__c"
+        },
+        {
+          "name": "Door",
+          "locationField": "Location_of_Door__c",
+          "quantityField": "No_of_Door__c"
+        },
+        {
+          "name": "Dresser",
+          "locationField": "Location_of_Dresser__c",
+          "quantityField": "No_of_Dresser__c"
+        },
+        {
+          "name": "Fan (Any Size)",
+          "locationField": "Location_of_Fan_Any_Size__c",
+          "quantityField": "No_of_Fan_Any_Size__c"
+        },
+        {
+          "name": "Fence (Wood)",
+          "locationField": "Location_of_Fence_Wood__c",
+          "quantityField": "No_of_Fence_Wood__c"
+        },
+        {
+          "name": "Glass/Mirror",
+          "locationField": "Location_of_Glass_Mirror__c",
+          "quantityField": "No_of_Glass_Mirror__c"
+        },
+        {
+          "name": "Headboard (Wood)",
+          "locationField": "Location_of_Headboard_Wood__c",
+          "quantityField": "No_of_Headboard_Wood__c"
+        },
+        {
+          "name": "Ladders (Wood)",
+          "locationField": "Location_of_Ladders_Wood__c",
+          "quantityField": "No_of_Ladders_Wood__c"
+        },
+        {
+          "name": "Lamp",
+          "locationField": "Location_of_Lamp__c",
+          "quantityField": "No_of_Lamp__c"
+        },
+        {
+          "name": "Mattress",
+          "locationField": "Location_of_Mattress__c",
+          "quantityField": "No_of_Mattress__c"
+        },
+        {
+          "name": "Mirror (Framed)",
+          "locationField": "Location_of_Mirror_Framed__c",
+          "quantityField": "No_of_Mirror_Framed__c"
+        },
+        {
+          "name": "Patio Umbrella",
+          "locationField": "Location_of_Patio_Umbrella__c",
+          "quantityField": "No_of_Patio_Umbrella__c"
+        },
+        {
+          "name": "Piano",
+          "locationField": "Location_of_Piano__c",
+          "quantityField": "No_of_Piano__c"
+        },
+        {
+          "name": "Pipes (Plastic)",
+          "locationField": "Location_of_Pipes_Plastic__c",
+          "quantityField": "No_of_Pipes_Plastic__c"
+        },
+        {
+          "name": "Planter Pot",
+          "locationField": "Location_of_Planter_Pot__c",
+          "quantityField": "No_of_Planter_Pot__c"
+        },
+        {
+          "name": "Pool Heater/Pump/Filter",
+          "locationField": "Location_of_Pool_Heater_Pump_Filter__c",
+          "quantityField": "No_of_Pool_Heater_Pump_Filter__c"
+        },
+        {
+          "name": "Pool/Spa Cover",
+          "locationField": "Location_of_Pool_Spa_Cover__c",
+          "quantityField": "No_of_Pool_Spa_Cover__c"
+        },
+        {
+          "name": "Rain Gutter (Plastic)",
+          "locationField": "Location_of_Rain_Gutter_Plastic__c",
+          "quantityField": "No_of_Rain_Gutter_Plastic__c"
+        },
+        {
+          "name": "Sofa",
+          "locationField": "Location_of_Sofa_Bed__c",
+          "quantityField": "No_of_Sofa_Bed__c"
+        },
+        {
+          "name": "Sofa Bed",
+          "locationField": "Location_of_Sofa__c",
+          "quantityField": "No_of_Sofa__c"
+        },
+        {
+          "name": "Spa/Jacuzzi",
+          "locationField": "Location_of_Spa_Jacuzzi__c",
+          "quantityField": "No_of_Spa_Jacuzzi__c"
+        },
+        {
+          "name": "Stroller",
+          "locationField": "Location_of_Stroller__c",
+          "quantityField": "No_of_Stroller__c"
+        },
+        {
+          "name": "Suitcase",
+          "locationField": "Location_of_Suitcase__c",
+          "quantityField": "No_of_Suitcase__c"
+        },
+        {
+          "name": "Table (Wood)",
+          "locationField": "Location_of_Table_Wood__c",
+          "quantityField": "No_of_Table_Wood__c"
+        },
+        {
+          "name": "Toilet",
+          "locationField": "Location_of_Toilet__c",
+          "quantityField": "No_of_Toilet__c"
+        },
+        {
+          "name": "Toys (Large Ones)",
+          "locationField": "Location_of_Toys_Large_Ones__c",
+          "quantityField": "No_of_Toys_Large_Ones__c"
+        },
+        {
+          "name": "Tub (Non Metal)",
+          "locationField": "Location_of_Tub_Non_Metal__c",
+          "quantityField": "No_of_Tub_Non_Metal__c"
+        },
+        {
+          "name": "Vacuum",
+          "locationField": "Location_of_Vacuum__c",
+          "quantityField": "No_of_Vacuum__c"
+        },
+        {
+          "name": "Walker",
+          "locationField": "Location_of_Walker__c",
+          "quantityField": "No_of_Walker__c"
+        },
+        {
+          "name": "Window",
+          "locationField": "Location_of_Window__c",
+          "quantityField": "No_of_Window__c"
+        },
+        {
+          "name": "Wood Bundles",
+          "locationField": "Location_of_Wood_Bundles__c",
+          "quantityField": "No_of_Wood_Bundles__c"
+        }
+      ]
+    },
+    {
+      "name": "Electronic Waste",
+      "selectionField": "Electronic_Waste_Options__c",
+      "items": [
+        {
+          "name": "Computers",
+          "locationField": "Location_of_Computers__c",
+          "quantityField": "No_of_Computers__c"
+        },
+        {
+          "name": "Copier/Scanner",
+          "locationField": "Location_of_Copier_Scanner__c",
+          "quantityField": "No_of_Copier_Scanner__c"
+        },
+        {
+          "name": "Electronic Equipment",
+          "locationField": "Location_of_Electronic_Equipment__c",
+          "quantityField": "No_of_Electronic_Equipment__c"
+        },
+        {
+          "name": "Microwaves",
+          "locationField": "Location_of_Microwaves__c",
+          "quantityField": "No_of_Microwaves__c"
+        },
+        {
+          "name": "Monitors",
+          "locationField": "Location_of_Monitors__c",
+          "quantityField": "No_of_Monitors__c"
+        },
+        {
+          "name": "Printer/Fax Machine",
+          "locationField": "Location_of_Printer_Fax_Machine__c",
+          "quantityField": "No_of_Printer_Fax_Machine__c"
+        },
+        {
+          "name": "TV (Any Size)",
+          "locationField": "Location_of_TV_Any_Size__c",
+          "quantityField": "No_of_TV_Any_Size__c"
+        }
+      ]
+    },
+    {
+      "name": "Metal/Household Appliances",
+      "selectionField": "Metal_Household_Appliances_Options__c",
+      "items": [
+        {
+          "name": "Air Conditioner",
+          "locationField": "Location_of_Air_Conditioner__c",
+          "quantityField": "No_of_Air_Conditioner__c"
+        },
+        {
+          "name": "BBQ",
+          "locationField": "Location_of_BBQ__c",
+          "quantityField": "No_of_BBQ__c"
+        },
+        {
+          "name": "Bed Frame (Metal)",
+          "locationField": "Location_of_Bed_Frame_Metal__c",
+          "quantityField": "No_of_Bed_Frame_Metal__c"
+        },
+        {
+          "name": "Bicycle/Parts",
+          "locationField": "Location_of_Bicycle_Parts__c",
+          "quantityField": "No_of_Bicycle_Parts__c"
+        },
+        {
+          "name": "Bird Cage (Metal)",
+          "locationField": "Location_of_Bird_Cage_Metal__c",
+          "quantityField": "No_of_Bird_Cage_Metal__c"
+        },
+        {
+          "name": "Desk (Metal)",
+          "locationField": "Location_of_Desk_Metal__c",
+          "quantityField": "No_of_Desk_Metal__c"
+        },
+        {
+          "name": "Dishwasher",
+          "locationField": "Location_of_Dishwasher__c",
+          "quantityField": "No_of_Dishwasher__c"
+        },
+        {
+          "name": "Fence (Metal)",
+          "locationField": "Location_of_Fence_Metal__c",
+          "quantityField": "No_of_Fence_Metal__c"
+        },
+        {
+          "name": "File Cabinet (Metal)",
+          "locationField": "Location_of_File_Cabinet_Metal__c",
+          "quantityField": "No_of_File_Cabinet_Metal__c"
+        },
+        {
+          "name": "Garage Door (Metal)",
+          "locationField": "Location_of_Garage_Door_Metal__c",
+          "quantityField": "No_of_Garage_Door_Metal__c"
+        },
+        {
+          "name": "Headboard (Metal)",
+          "locationField": "Location_of_Headboard_Metal__c",
+          "quantityField": "No_of_Headboard_Metal__c"
+        },
+        {
+          "name": "Heater",
+          "locationField": "Location_of_Heater__c",
+          "quantityField": "No_of_Heater__c"
+        },
+        {
+          "name": "Ladders (Metal)",
+          "locationField": "Location_of_Ladders_Metal__c",
+          "quantityField": "No_of_Ladders_Metal__c"
+        },
+        {
+          "name": "Lawn Mower",
+          "locationField": "Location_of_Lawn_Mower__c",
+          "quantityField": "No_of_Lawn_Mower__c"
+        },
+        {
+          "name": "Light Fixture",
+          "locationField": "Location_of_Light_Fixture__c",
+          "quantityField": "No_of_Light_Fixture__c"
+        },
+        {
+          "name": "Metal Cabinet",
+          "locationField": "Location_of_Metal_Cabinet__c",
+          "quantityField": "No_of_Metal_Cabinet__c"
+        },
+        {
+          "name": "Pipes (Metal)",
+          "locationField": "Location_of_Pipes_Metal__c",
+          "quantityField": "No_of_Pipes_Metal__c"
+        },
+        {
+          "name": "Rain Gutter (Metal)",
+          "locationField": "Location_of_Rain_Gutter_Metal__c",
+          "quantityField": "No_of_Rain_Gutter_Metal__c"
+        },
+        {
+          "name": "Refrigerator/Freezer",
+          "locationField": "Location_of_Refrigerator_Freezer__c",
+          "quantityField": "No_of_Refrigerator_Freezer__c"
+        },
+        {
+          "name": "Scrap Metal",
+          "locationField": "Location_of_Scrap_Metal__c",
+          "quantityField": "No_of_Scrap_Metal__c"
+        },
+        {
+          "name": "Shelf (Metal)",
+          "locationField": "Location_of_Shelf_Metal__c",
+          "quantityField": "No_of_Shelf_Metal__c"
+        },
+        {
+          "name": "Sink",
+          "locationField": "Location_of_Sink__c",
+          "quantityField": "No_of_Sink__c"
+        },
+        {
+          "name": "Stove/Oven",
+          "locationField": "Location_of_Stove_Oven__c",
+          "quantityField": "No_of_Stove_Oven__c"
+        },
+        {
+          "name": "Trash Compactor",
+          "locationField": "Location_of_Trash_Compactor__c",
+          "quantityField": "No_of_Trash_Compactor__c"
+        },
+        {
+          "name": "Tub (Metal)",
+          "locationField": "Location_of_Tub_Metal__c",
+          "quantityField": "No_of_Tub_Metal__c"
+        },
+        {
+          "name": "Washing Machine/Dryer",
+          "locationField": "Location_of_Washing_Machine_Dryer__c",
+          "quantityField": "No_of_Washing_Machine_Dryer__c"
+        },
+        {
+          "name": "Water Heater",
+          "locationField": "Location_of_Water_Heater__c",
+          "quantityField": "No_of_Water_Heater__c"
+        },
+        {
+          "name": "Window Frame (Metal)",
+          "locationField": "Location_of_Window_Frame_Metal__c",
+          "quantityField": "No_of_Window_Frame_Metal__c"
+        }
+      ]
+    },
+    {
+      "name": "I'm not sure",
+      "selectionField": "Illegally_Dumped_Pickup_Options__c",
+      "items": [
+        {
+          "name": "Auto Parts",
+          "locationField": "Location_of_Auto_Parts__c",
+          "quantityField": "No_of_Auto_Parts__c"
+        },
+        {
+          "name": "Bedding (blankets, pillows, sheets, etc.)",
+          "locationField": "Location_of_Bedding__c",
+          "quantityField": "No_of_Bedding__c"
+        },
+        {
+          "name": "Bottles/Glass",
+          "locationField": "Location_of_Bottles_Glass__c",
+          "quantityField": "No_of_Bottles_Glass__c"
+        },
+        {
+          "name": "Brush",
+          "locationField": "Location_of_Brush__c",
+          "quantityField": "No_of_Brush__c"
+        },
+        {
+          "name": "Cardboard/Boxes",
+          "locationField": "Location_of_Cardboard_Boxes__c",
+          "quantityField": "No_of_Cardboard_Boxes__c"
+        },
+        {
+          "name": "Christmas Tree",
+          "locationField": "Location_of_Christmas_Tree__c",
+          "quantityField": "No_of_Christmas_Tree__c"
+        },
+        {
+          "name": "Clothes",
+          "locationField": "Location_of_Clothes__c",
+          "quantityField": "No_of_Clothes__c"
+        },
+        {
+          "name": "Construction Material (bricks, drywall, concrete, etc.)",
+          "locationField": "Location_of_Construction_Material__c",
+          "quantityField": "No_of_Construction_Material__c"
+        },
+        {
+          "name": "Electronic Waste (televisions, stereo equipment, etc.)",
+          "locationField": "Location_of_Electronic_Waste__c",
+          "quantityField": "No_of_Electronic_Waste__c"
+        },
+        {
+          "name": "Loose/Miscellaneous Debris",
+          "locationField": "Location_of_Loose_Miscellaneous_Debris__c",
+          "quantityField": "No_of_Loose_Miscellaneous_Debris__c"
+        },
+        {
+          "name": "Metal Household Appliances (stoves/ovens, washing machines/dryers, etc.)",
+          "locationField": "Location_of_Metal_Household_Appliances__c",
+          "quantityField": "No_of_Metal_Household_Appliances__c"
+        },
+        {
+          "name": "Other Items (sofas, tables, chairs, etc.)",
+          "locationField": "Location_of_Other_Items__c",
+          "quantityField": "No_of_Other_Items__c"
+        },
+        {
+          "name": "Pallets",
+          "locationField": "Location_of_Pallets__c",
+          "quantityField": "No_of_Pallets__c"
+        },
+        {
+          "name": "Shopping Carts",
+          "locationField": "Location_of_Shopping_Carts__c",
+          "quantityField": "No_of_Shopping_Carts__c"
+        },
+        {
+          "name": "Spas",
+          "locationField": "Location_of_Spas__c",
+          "quantityField": "No_of_Spas__c"
+        },
+        {
+          "name": "Tarps",
+          "locationField": "Location_of_Tarps__c",
+          "quantityField": "No_of_Tarps__c"
+        },
+        {
+          "name": "Tires",
+          "locationField": "Location_of_Tires__c",
+          "quantityField": "No_of_Tires__c"
+        },
+        {
+          "name": "Trash Bags",
+          "locationField": "Location_of_Trash_Bags__c",
+          "quantityField": "No_of_Trash_Bags__c"
+        },
+        {
+          "name": "Tubs",
+          "locationField": "Location_of_Tubs__c",
+          "quantityField": "No_of_Tubs__c"
+        },
+        {
+          "name": "Wood",
+          "locationField": "Location_of_Wood__c",
+          "quantityField": "No_of_Wood__c"
+        }
+      ]
+    }
+  ]
+}

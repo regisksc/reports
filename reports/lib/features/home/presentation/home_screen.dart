@@ -14,6 +14,11 @@ import '../application/home_resume.dart';
 import 'accepted_home_hero.dart';
 import '../../dev_api/presentation/dev_api_entry_button.dart';
 import '../../report/presentation/report_detail_page.dart';
+import '../../services/service_catalog_page.dart';
+import '../../services/service_preview_store.dart';
+import '../../account/settings_page.dart';
+import '../../account/help_page.dart';
+import '../../nearby/nearby_page.dart';
 part 'home_components.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -103,6 +108,57 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _openCatalog() async {
+    final selected = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute<bool>(
+        builder: (catalogContext) => ServiceCatalogPage(
+          onIllegalDumping: () => Navigator.pop(catalogContext, true),
+        ),
+      ),
+    );
+    if (selected == true && mounted) {
+      await _openReport();
+    }
+  }
+
+  Future<void> _openHistory() async {
+    final startReport = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute<bool>(
+        builder: (historyContext) => HistoryPage(
+          store: widget.store,
+          client: widget.client,
+          onStartReport: () => Navigator.pop(historyContext, true),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    setState(() {
+      _homeResume = loadHomeResume(widget.store);
+    });
+    if (startReport == true) {
+      await _openCatalog();
+    }
+  }
+
+  Future<void> _clearPreviewData() async {
+    final previewsCleared = await const ServicePreviewStore().clear();
+    await NearbyPage.clearSavedFilters();
+    if (!previewsCleared) throw StateError('Could not clear service previews');
+  }
+
+  Future<void> _openSettings() => Navigator.push<void>(
+    context,
+    MaterialPageRoute<void>(
+      builder: (_) => SettingsPage(
+        reduceMotion: widget.reduceMotion,
+        onMotionChanged: widget.onMotionChanged,
+        onClearLocalData: _clearPreviewData,
+      ),
+    ),
+  );
+
   Future<void> _continueResume(HomeResume resume) async {
     final draft = resume.draft;
     if (draft != null) {
@@ -135,28 +191,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: devApiPill(
-                              context,
-                              store: widget.store,
-                              key: const Key('home-dev-api-pill'),
+                          if (reportsDevModeEnabled) ...[
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: devApiPill(
+                                context,
+                                store: widget.store,
+                                key: const Key('home-dev-api-pill'),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 20),
+                            const SizedBox(height: 20),
+                          ],
                           Row(
                             children: [
                               Expanded(
                                 child: Align(
                                   alignment: Alignment.centerLeft,
-                                  child: Image.asset(
-                                    'assets/brand/reports-pop-horizontal-color.png',
-                                    key: const ValueKey('reports-brand-logo'),
-                                    width: 150,
-                                    height: 42,
-                                    fit: BoxFit.contain,
-                                    semanticLabel: 'Reports',
-                                  ),
+                                  child: const _ReportsWordmark(),
                                 ),
                               ),
                               Container(
@@ -174,33 +225,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                   color: Colors.white,
                                 ),
-                                child: PopupMenuButton<bool>(
-                                  tooltip: 'Motion settings',
-                                  popUpAnimationStyle:
-                                      MediaQuery.disableAnimationsOf(context)
-                                      ? AnimationStyle.noAnimation
-                                      : null,
+                                child: IconButton(
+                                  tooltip: 'Settings',
                                   icon: const Icon(
                                     Icons.settings_outlined,
                                     size: 22,
                                   ),
-                                  onSelected: widget.onMotionChanged,
-                                  itemBuilder: (context) => [
-                                    CheckedPopupMenuItem(
-                                      value: false,
-                                      checked: !widget.reduceMotion,
-                                      child: const Text(
-                                        'Follow device settings',
-                                      ),
-                                    ),
-                                    CheckedPopupMenuItem(
-                                      value: true,
-                                      checked: widget.reduceMotion,
-                                      child: const Text(
-                                        'Reduce motion for this session',
-                                      ),
-                                    ),
-                                  ],
+                                  onPressed: _openSettings,
                                 ),
                               ),
                             ],
@@ -231,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     !_heroBounds.isEmpty
                                 ? AcceptedHomeHero(
                                     height: _heroBounds.height,
-                                    onStartReport: () => _openReport(),
+                                    onStartReport: _openCatalog,
                                   )
                                 : Container(
                                     key: const Key('home-hero'),
@@ -259,18 +290,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
-                                          'Report illegal dumping.',
-                                          style: TextStyle(
-                                            fontSize: 35,
-                                            height: 1.05,
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: -1,
+                                        const SizedBox(
+                                          width: 240,
+                                          child: Text(
+                                            'Report a problem.',
+                                            style: TextStyle(
+                                              fontSize: 35,
+                                              height: 1.05,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: -1,
+                                            ),
                                           ),
                                         ),
                                         const SizedBox(height: 14),
                                         const Text(
-                                          'A cleaner Los Angeles starts with you. Send dumped items directly to MyLA311.',
+                                          'Find a Los Angeles service and prepare your report.',
                                           style: TextStyle(
                                             fontSize: 14,
                                             height: 1.55,
@@ -289,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     width: 2,
                                                   ),
                                                 ),
-                                            onPressed: () => _openReport(),
+                                            onPressed: _openCatalog,
                                             icon: const Icon(
                                               Icons.arrow_forward_rounded,
                                               size: 20,
@@ -301,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         const SizedBox(height: 14),
                                         const Center(
                                           child: Text(
-                                            'No account needed · Photos are optional',
+                                            'Choose a service · Your progress stays here',
                                             style: TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.w500,
@@ -339,21 +373,34 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Expanded(
                                   child: _HomeAction(
-                                    icon: Icons.inventory_2_outlined,
-                                    title: 'View saved reports',
-                                    description: 'Reports & receipts',
+                                    icon: Icons.location_on_outlined,
+                                    title: 'Nearby reports',
+                                    description: 'Explore your neighborhood',
                                     onTap: () => Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => HistoryPage(
-                                          store: widget.store,
-                                          client: widget.client,
-                                        ),
+                                        builder: (_) => const NearbyPage(),
                                       ),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
+                                Expanded(
+                                  child: _HomeAction(
+                                    icon: Icons.inventory_2_outlined,
+                                    title: 'View saved reports',
+                                    description: 'Reports & receipts',
+                                    onTap: _openHistory,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
                                 Expanded(
                                   child: _HomeAction(
                                     icon: Icons.help_outline_rounded,
@@ -362,13 +409,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                     onTap: () => Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => _InformationPage(
-                                          store: widget.store,
-                                        ),
+                                        builder: (_) =>
+                                            HelpPage(store: widget.store),
                                       ),
                                     ),
                                   ),
                                 ),
+                                const SizedBox(width: 12),
+                                const Expanded(child: SizedBox()),
                               ],
                             ),
                           ),

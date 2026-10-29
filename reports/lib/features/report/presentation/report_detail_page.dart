@@ -37,7 +37,11 @@ class ReportDetailPage extends StatelessWidget {
               photoPaths: report.photoPaths,
               debrisLocation: report.debrisLocation,
               quantity: report.quantity?.toString() ?? '',
-              step: 4,
+              itemFamily: report.itemFamily,
+              items: report.items,
+              step: 5,
+              flowVersion: 2,
+              contact: report.contact ?? const ReportContact(anonymous: true),
             );
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -76,6 +80,23 @@ class ReportDetailPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
+            Text(
+              'SAVED ON THIS DEVICE',
+              style: theme.textTheme.labelSmall?.copyWith(letterSpacing: 1.2),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              isSubmitted && srNumber?.isNotEmpty == true
+                  ? srNumber!
+                  : 'Your report',
+              style: theme.textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${reportStatusLabel(report.state)} · ${formatReportDate(report.createdAt)}',
+              style: const TextStyle(color: ReportsStyle.muted),
+            ),
+            const SizedBox(height: 24),
             if (photo != null) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(20),
@@ -166,6 +187,11 @@ class ReportDetailPage extends StatelessWidget {
                                   final box =
                                       shareContext.findRenderObject()
                                           as RenderBox;
+                                  final itemSummary = report.itemFamily == null
+                                      ? '${report.debrisLocation == null ? '' : 'Debris location: ${report.debrisLocation}\n'}'
+                                            '${report.quantity == null ? '' : 'Item count: ${report.quantity}\n'}'
+                                      : 'Material: ${report.itemFamily}\n'
+                                            '${report.items.map((item) => '${item.quantity} × ${item.name} · ${item.location}\n').join()}';
                                   try {
                                     await SharePlus.instance.share(
                                       ShareParams(
@@ -177,8 +203,7 @@ class ReportDetailPage extends StatelessWidget {
                                             'Status: Submitted\n'
                                             'Description: ${report.description}\n'
                                             'Coordinates: ${report.latitude.toStringAsFixed(6)}, ${report.longitude.toStringAsFixed(6)}\n'
-                                            '${report.debrisLocation == null ? '' : 'Debris location: ${report.debrisLocation}\n'}'
-                                            '${report.quantity == null ? '' : 'Item count: ${report.quantity}\n'}'
+                                            '$itemSummary'
                                             'Created: ${formatReportDate(report.createdAt)}',
                                         sharePositionOrigin:
                                             box.localToGlobal(Offset.zero) &
@@ -211,17 +236,6 @@ class ReportDetailPage extends StatelessWidget {
                 ),
               ),
             ),
-            if (isSubmitted && srNumber?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 20),
-              OutlinedButton(
-                onPressed: () => confirmLocalRemoval(
-                  context,
-                  title: 'Remove local receipt?',
-                  remove: () => store.removeLocalReceipt(report),
-                ),
-                child: const Text('Remove local receipt'),
-              ),
-            ],
             if (report.state == ReportState.notSent) ...[
               const SizedBox(height: 20),
               FilledButton(
@@ -248,7 +262,31 @@ class ReportDetailPage extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(report.description),
                   const SizedBox(height: 20),
-                  if (report.debrisLocation != null) ...[
+                  if (report.itemFamily != null) ...[
+                    const Text(
+                      'Item type',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(report.itemFamily!),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Items',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      report.items
+                          .map(
+                            (item) =>
+                                '${item.quantity} × ${item.name} · ${item.location ?? 'Location needed'}',
+                          )
+                          .join('\n'),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                  if (report.itemFamily == null &&
+                      report.debrisLocation != null) ...[
                     const Text(
                       'Debris location',
                       style: TextStyle(fontWeight: FontWeight.w800),
@@ -257,7 +295,7 @@ class ReportDetailPage extends StatelessWidget {
                     Text(report.debrisLocation!),
                     const SizedBox(height: 20),
                   ],
-                  if (report.quantity != null) ...[
+                  if (report.itemFamily == null && report.quantity != null) ...[
                     const Text(
                       'Item count',
                       style: TextStyle(fontWeight: FontWeight.w800),
@@ -276,6 +314,19 @@ class ReportDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   const Text(
+                    'Contact',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    report.contact == null || report.contact!.anonymous
+                        ? 'Anonymous'
+                        : '${report.contact!.firstName} ${report.contact!.lastName}\n'
+                              '${report.contact!.email}'
+                              '${report.contact!.phone.isEmpty ? '' : '\n${report.contact!.phone}'}',
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
                     'Date created',
                     style: TextStyle(fontWeight: FontWeight.w800),
                   ),
@@ -284,6 +335,17 @@ class ReportDetailPage extends StatelessWidget {
                 ],
               ),
             ),
+            if (isSubmitted && srNumber?.trim().isNotEmpty == true) ...[
+              const SizedBox(height: 20),
+              OutlinedButton(
+                onPressed: () => confirmLocalRemoval(
+                  context,
+                  title: 'Remove local receipt?',
+                  remove: () => store.removeLocalReceipt(report),
+                ),
+                child: const Text('Remove local receipt'),
+              ),
+            ],
           ],
         ),
       ),

@@ -55,7 +55,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester.getRect(find.text('Dev / API')).bottom,
-        lessThan(tester.getRect(find.text('Help')).top),
+        lessThan(tester.getRect(find.text('Let’s clear things up.')).top),
       );
       await tester.tap(find.text('Dev / API'));
       await tester.pumpAndSettle();
@@ -108,7 +108,7 @@ void main() {
 
       expect(requests, 0);
       final retained = await tester.runAsync(testStore.loadDraft);
-      expect(retained?.toJson(), draft.toJson());
+      expect(retained?.toJson(), ReportDraft.fromJson(draft.toJson()).toJson());
     },
   );
 

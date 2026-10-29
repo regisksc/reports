@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -82,14 +83,13 @@ void main() {
           () => _homeResumeContinueButton().evaluate().isNotEmpty,
         );
         if (mode == 'session') {
-          await tester.tap(find.byTooltip('Motion settings'));
+          await tester.tap(find.byTooltip('Settings'));
           await tester.pumpAndSettle();
           await tester.tap(
-            find.widgetWithText(
-              CheckedPopupMenuItem<bool>,
-              'Reduce motion for this session',
-            ),
+            find.widgetWithText(SwitchListTile, 'Reduce motion'),
           );
+          await tester.pumpAndSettle();
+          await tester.pageBack();
         }
         await tester.pumpAndSettle();
         final heroBefore = tester.getRect(find.byKey(const Key('home-hero')));
@@ -181,7 +181,23 @@ void main() {
               .length,
         };
         await tester.ensureVisible(find.text('Start a report'));
+        rootBundle.evict('assets/service_catalog.json');
+        await tester.runAsync(
+          () => rootBundle.loadString('assets/service_catalog.json'),
+        );
         await tester.tap(find.text('Start a report'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Search services'),
+          'Illegal Dumping',
+        );
+        await _waitFor(
+          tester,
+          () => find.text('Illegal Dumping Item Pickup').evaluate().isNotEmpty,
+        );
+        await tester.tap(find.text('Illegal Dumping Item Pickup'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Start report'));
         await _waitFor(
           tester,
           () => find.text('Where did you spot it?').evaluate().isNotEmpty,

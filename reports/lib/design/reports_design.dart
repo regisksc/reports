@@ -10,6 +10,7 @@ abstract final class ReportsStyle {
 
   static ButtonStyle raisedButtonStyle({
     Color backgroundColor = orange,
+    Color shadowColor = orangeDark,
     BorderSide side = BorderSide.none,
   }) =>
       FilledButton.styleFrom(
@@ -25,6 +26,7 @@ abstract final class ReportsStyle {
         backgroundBuilder: (context, states, child) => ReportsRaisedButton(
           states: states,
           backgroundColor: backgroundColor,
+          shadowColor: shadowColor,
           side: side,
           child: child!,
         ),
@@ -141,12 +143,14 @@ class ReportsRaisedButton extends StatelessWidget {
     super.key,
     required this.states,
     required this.backgroundColor,
+    this.shadowColor = ReportsStyle.orangeDark,
     required this.side,
     required this.child,
   });
 
   final Set<WidgetState> states;
   final Color backgroundColor;
+  final Color shadowColor;
   final BorderSide side;
   final Widget child;
 
@@ -179,7 +183,7 @@ class ReportsRaisedButton extends StatelessWidget {
               boxShadow: enabled
                   ? [
                       BoxShadow(
-                        color: ReportsStyle.orangeDark,
+                        color: shadowColor,
                         offset: Offset(0, pressed ? 1 : 4),
                       ),
                     ]

@@ -131,6 +131,7 @@ class DemoSignInPage extends StatelessWidget {
     final route = ModalRoute.of(context);
     return _AccountForm(
       mode: 'signin',
+      backLabel: 'Back to service',
       onSaved: () {
         final navigator = Navigator.of(context);
         navigator.popUntil((item) => item == route);
@@ -141,9 +142,14 @@ class DemoSignInPage extends StatelessWidget {
 }
 
 class _AccountForm extends StatefulWidget {
-  const _AccountForm({required this.mode, required this.onSaved});
+  const _AccountForm({
+    required this.mode,
+    required this.onSaved,
+    this.backLabel = 'Account',
+  });
   final String mode;
   final VoidCallback onSaved;
+  final String backLabel;
   @override
   State<_AccountForm> createState() => _AccountFormState();
 }
@@ -236,6 +242,16 @@ class _AccountFormState extends State<_AccountForm> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: mode == 'recovery'
+                    ? () => Navigator.pop(context)
+                    : widget.onSaved,
+                icon: const Icon(Icons.arrow_back),
+                label: Text(mode == 'recovery' ? 'Sign in' : widget.backLabel),
+              ),
+            ),
             Text(title, style: Theme.of(context).textTheme.headlineMedium),
             Text(switch (mode) {
               'signin' => 'Demo only. Do not enter a real password.',
@@ -250,44 +266,64 @@ class _AccountFormState extends State<_AccountForm> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (mode == 'register' || mode == 'profile') ...[
-                    TextFormField(
-                      controller: name,
-                      onChanged: (_) => edited = true,
-                      decoration: InputDecoration(
-                        labelText: mode == 'profile' ? 'Display name' : 'Name',
+                    Text(
+                      mode == 'profile' ? 'Display name' : 'Name',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                    Semantics(
+                      label: mode == 'profile' ? 'Display name' : 'Name',
+                      child: TextFormField(
+                        controller: name,
+                        onChanged: (_) => edited = true,
+                        decoration: const InputDecoration(),
+                        validator: (value) =>
+                            mode == 'register' &&
+                                (value == null || value.trim().isEmpty)
+                            ? 'Enter a name'
+                            : null,
                       ),
-                      validator: (value) =>
-                          mode == 'register' &&
-                              (value == null || value.trim().isEmpty)
-                          ? 'Enter a name'
-                          : null,
                     ),
                     const SizedBox(height: 12),
                   ],
-                  TextFormField(
-                    controller: email,
-                    onChanged: (_) => edited = true,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: (value) =>
-                        mode != 'profile' &&
-                            (value == null || value.trim().isEmpty)
-                        ? 'Enter an email'
-                        : null,
+                  const Text(
+                    'Email',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  Semantics(
+                    label: 'Email',
+                    child: TextFormField(
+                      controller: email,
+                      onChanged: (_) => edited = true,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(),
+                      validator: (value) =>
+                          mode != 'profile' &&
+                              (value == null || value.trim().isEmpty)
+                          ? 'Enter an email'
+                          : null,
+                    ),
                   ),
                   if (mode == 'signin') ...[
                     const SizedBox(height: 12),
-                    TextFormField(
-                      controller: password,
-                      obscureText: true,
-                      enableSuggestions: false,
-                      autocorrect: false,
-                      decoration: const InputDecoration(
-                        labelText: 'Demo password',
+                    const Text(
+                      'Demo password',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                    Semantics(
+                      label: 'Demo password',
+                      child: TextFormField(
+                        controller: password,
+                        obscureText: true,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                        decoration: const InputDecoration(),
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Enter a demo password'
+                            : null,
                       ),
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Enter a demo password'
-                          : null,
                     ),
                   ],
                   const SizedBox(height: 16),
@@ -308,28 +344,39 @@ class _AccountFormState extends State<_AccountForm> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Text(message!),
               ),
-            if (mode == 'signin') ...[
-              TextButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) =>
-                        _AccountForm(mode: 'recovery', onSaved: widget.onSaved),
+            if (mode == 'signin')
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  OutlinedButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => _AccountForm(
+                          mode: 'recovery',
+                          onSaved: widget.onSaved,
+                          backLabel: widget.backLabel,
+                        ),
+                      ),
+                    ),
+                    child: const Text('Forgot password?'),
                   ),
-                ),
-                child: const Text('Forgot password?'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) =>
-                        _AccountForm(mode: 'register', onSaved: widget.onSaved),
+                  OutlinedButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => _AccountForm(
+                          mode: 'register',
+                          onSaved: widget.onSaved,
+                          backLabel: widget.backLabel,
+                        ),
+                      ),
+                    ),
+                    child: const Text('Create account'),
                   ),
-                ),
-                child: const Text('Create account'),
+                ],
               ),
-            ],
           ],
         ),
       ),

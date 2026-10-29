@@ -1,4 +1,8 @@
+import 'report_contact.dart';
+import 'report_item.dart';
+
 export 'report_contact.dart';
+export 'report_item.dart';
 
 enum ReportState { notSent, submitted, failed, submissionUncertain }
 
@@ -13,7 +17,13 @@ class ReportDraft {
     this.debrisLocation,
     this.quantity = '',
     this.step = 0,
-  }) : photoPaths = List.unmodifiable(photoPaths ?? [?photoPath]);
+    this.flowVersion = 1,
+    this.contact,
+    this.rememberContact = false,
+    this.itemFamily,
+    List<ReportItem> items = const [],
+  }) : photoPaths = List.unmodifiable(photoPaths ?? [?photoPath]),
+       items = List.unmodifiable(items);
 
   final DateTime createdAt;
   final String description;
@@ -24,6 +34,11 @@ class ReportDraft {
   final String? debrisLocation;
   final String quantity;
   final int step;
+  final int flowVersion;
+  final ReportContact? contact;
+  final bool rememberContact;
+  final String? itemFamily;
+  final List<ReportItem> items;
 
   Map<String, dynamic> toJson() => {
     'createdAt': createdAt.toIso8601String(),
@@ -35,6 +50,11 @@ class ReportDraft {
     'debrisLocation': debrisLocation,
     'quantity': quantity,
     'step': step,
+    'flowVersion': flowVersion,
+    'rememberContact': rememberContact,
+    if (contact != null) 'contact': contact!.toJson(),
+    if (itemFamily != null) 'itemFamily': itemFamily,
+    if (items.isNotEmpty) 'items': items.map((item) => item.toJson()).toList(),
   };
 
   factory ReportDraft.fromJson(Map<String, dynamic> json) => ReportDraft(
@@ -46,7 +66,20 @@ class ReportDraft {
     photoPaths: (json['photoPaths'] as List?)?.cast<String>(),
     debrisLocation: json['debrisLocation'] as String?,
     quantity: json['quantity'] as String,
-    step: json['step'] as int,
+    step: (json['flowVersion'] as int? ?? 1) < 2 && json['step'] == 4
+        ? 5
+        : json['step'] as int,
+    flowVersion: 2,
+    rememberContact: json['rememberContact'] as bool? ?? false,
+    itemFamily: json['itemFamily'] as String?,
+    items: (json['items'] as List? ?? [])
+        .map((item) => ReportItem.fromJson(item as Map<String, dynamic>))
+        .toList(),
+    contact: json['contact'] == null
+        ? ((json['flowVersion'] as int? ?? 1) < 2
+              ? const ReportContact(anonymous: true)
+              : null)
+        : ReportContact.fromJson(json['contact'] as Map<String, dynamic>),
   );
 }
 
@@ -62,7 +95,11 @@ class Report {
     this.quantity,
     this.state = ReportState.notSent,
     this.serviceRequestNumber,
-  }) : photoPaths = List.unmodifiable(photoPaths ?? [?photoPath]);
+    this.contact,
+    this.itemFamily,
+    List<ReportItem> items = const [],
+  }) : photoPaths = List.unmodifiable(photoPaths ?? [?photoPath]),
+       items = List.unmodifiable(items);
 
   final String description;
   final double latitude;
@@ -74,6 +111,9 @@ class Report {
   final int? quantity;
   final ReportState state;
   final String? serviceRequestNumber;
+  final ReportContact? contact;
+  final String? itemFamily;
+  final List<ReportItem> items;
 
   Map<String, dynamic> toJson() => {
     'description': description,
@@ -86,6 +126,9 @@ class Report {
     'quantity': quantity,
     'state': state.name,
     'serviceRequestNumber': serviceRequestNumber,
+    if (contact != null) 'contact': contact!.toJson(),
+    if (itemFamily != null) 'itemFamily': itemFamily,
+    if (items.isNotEmpty) 'items': items.map((item) => item.toJson()).toList(),
   };
 
   Report submittedWith(String serviceRequestNumber) => Report(
@@ -98,6 +141,9 @@ class Report {
     quantity: quantity,
     state: ReportState.submitted,
     serviceRequestNumber: serviceRequestNumber,
+    contact: contact,
+    itemFamily: itemFamily,
+    items: items,
   );
 
   factory Report.fromJson(Map<String, dynamic> json) => Report(
@@ -111,5 +157,12 @@ class Report {
     quantity: (json['quantity'] as num?)?.toInt(),
     state: ReportState.values.byName(json['state'] as String),
     serviceRequestNumber: json['serviceRequestNumber'] as String?,
+    itemFamily: json['itemFamily'] as String?,
+    items: (json['items'] as List? ?? [])
+        .map((item) => ReportItem.fromJson(item as Map<String, dynamic>))
+        .toList(),
+    contact: json['contact'] == null
+        ? null
+        : ReportContact.fromJson(json['contact'] as Map<String, dynamic>),
   );
 }

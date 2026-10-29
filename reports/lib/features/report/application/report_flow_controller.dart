@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import '../domain/report.dart';
+import '../domain/illegal_dumping_catalog.dart';
 import '../domain/submission_contract.dart';
 import 'report_store.dart';
 
@@ -12,13 +15,22 @@ class ReportFlowController extends ChangeNotifier {
   }) : draftCreatedAt = draft?.createdAt ?? DateTime.now() {
     if (draft != null) {
       description = draft.description;
+      itemFamily = draft.itemFamily;
+      items = List.unmodifiable(draft.items);
       quantityText = draft.quantity;
       debris = draft.debrisLocation;
       photoPaths.addAll(draft.photoPaths);
       if (draft.latitude != null && draft.longitude != null) {
         position = (latitude: draft.latitude!, longitude: draft.longitude!);
       }
-      step = position == null ? 0 : draft.step.clamp(0, 4);
+      contact =
+          draft.contact ??
+          (draft.flowVersion < 2 ? const ReportContact(anonymous: true) : null);
+      rememberContact = draft.rememberContact;
+      final resumedStep = draft.flowVersion < 2 && draft.step == 4
+          ? 5
+          : draft.step;
+      step = position == null ? 0 : resumedStep.clamp(0, 5);
     }
   }
   final ReportStore store;
@@ -28,8 +40,14 @@ class ReportFlowController extends ChangeNotifier {
   final List<String> photoPaths = [];
   ({double latitude, double longitude})? position;
   String description = '';
+  String? itemFamily = "I'm not sure";
+  List<ReportItem> items = const [];
+  IllegalDumpingCatalog? itemCatalog;
+  String? itemCatalogError;
   String quantityText = '';
   String? debris;
+  ReportContact? contact;
+  bool rememberContact = false;
   bool sending = false;
   String? failure;
   String? serviceRequestNumber;
@@ -40,6 +58,9 @@ class ReportFlowController extends ChangeNotifier {
   bool storageBlocked = false;
   bool draftSaveFailed = false;
   int draftSaveVersion = 0;
+  Future<void> _draftQueue = Future<void>.value();
+  int _pendingDraftWrites = 0;
+  bool get hasPendingDraftWrites => _pendingDraftWrites > 0;
   int step = 0;
   bool editingReview = false;
   bool _disposed = false;
@@ -48,6 +69,34 @@ class ReportFlowController extends ChangeNotifier {
     update();
     notifyListeners();
   }
+
+  Future<void> loadItemCatalog() async {
+    try {
+      final catalog = await IllegalDumpingCatalog.load();
+      if (!_disposed) {
+        _update(() {
+          itemCatalog = catalog;
+          itemCatalogError = null;
+        });
+      }
+    } on Object {
+      if (!_disposed) {
+        _update(() => itemCatalogError = 'Item choices could not be loaded.');
+      }
+    }
+  }
+
+  void updateItems(String family, List<ReportItem> selection) {
+    _update(() {
+      itemFamily = family;
+      items = List.unmodifiable(selection);
+    });
+    persistDraft();
+  }
+
+  bool get _itemsValid => itemFamily == null
+      ? items.isEmpty && debris != null && quantity != null
+      : itemCatalog?.validSelection(itemFamily!, items) ?? false;
 
   void changeStep(int value, {bool fromReview = false}) {
     _update(() {
@@ -114,42 +163,79 @@ class ReportFlowController extends ChangeNotifier {
       ? null
       : 'Enter a whole number from 1 to 999';
 
+  ReportContact? get _safeContact => contact?.anonymous == true
+      ? const ReportContact(anonymous: true)
+      : contact;
+
+  bool _validContactEmail(String value) =>
+      RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value.trim());
+
+  String? get contactEmailError {
+    final current = contact;
+    if (current == null ||
+        current.anonymous ||
+        current.email.trim().isEmpty ||
+        _validContactEmail(current.email)) {
+      return null;
+    }
+    return 'Enter a valid email address.';
+  }
+
+  bool get contactValid =>
+      contact != null &&
+      (contact!.anonymous ||
+          (contact!.firstName.trim().isNotEmpty &&
+              contact!.lastName.trim().isNotEmpty &&
+              _validContactEmail(contact!.email)));
+
   bool get canSubmit =>
-      !locked &&
-      position != null &&
-      description.trim().isNotEmpty &&
-      debris != null &&
-      quantity != null;
+      !locked && position != null && _itemsValid && contactValid;
 
   bool get canContinue =>
       !locked &&
       switch (step) {
         0 => position != null,
-        1 => debris != null && quantity != null,
-        3 => description.trim().isNotEmpty,
+        1 => _itemsValid,
+        4 => contactValid,
         _ => true,
       };
+
+  Future<void> flushDraftWrites() => _draftQueue;
 
   Future<void> persistDraft() async {
     if (locked) return;
     final version = ++draftSaveVersion;
+    final draft = ReportDraft(
+      createdAt: draftCreatedAt,
+      description: description,
+      latitude: position?.latitude,
+      longitude: position?.longitude,
+      photoPaths: photoPaths,
+      debrisLocation: debris,
+      quantity: quantityText,
+      step: step,
+      flowVersion: 2,
+      contact: _safeContact,
+      rememberContact: rememberContact,
+      itemFamily: itemFamily,
+      items: items,
+    );
+    final previous = _draftQueue;
+    _pendingDraftWrites++;
+    if (_pendingDraftWrites == 1 && !_disposed) notifyListeners();
+    final finished = Completer<void>();
+    _draftQueue = finished.future;
     bool saved;
     try {
-      await store.saveDraft(
-        ReportDraft(
-          createdAt: draftCreatedAt,
-          description: description,
-          latitude: position?.latitude,
-          longitude: position?.longitude,
-          photoPaths: photoPaths,
-          debrisLocation: debris,
-          quantity: quantityText,
-          step: step,
-        ),
-      );
+      await previous;
+      await store.saveDraft(draft);
       saved = true;
     } on Object {
       saved = false;
+    } finally {
+      _pendingDraftWrites--;
+      finished.complete();
+      if (_pendingDraftWrites == 0 && !_disposed) notifyListeners();
     }
     if (!_disposed && version == draftSaveVersion && !locked) {
       _update(() => draftSaveFailed = !saved);
@@ -162,6 +248,8 @@ class ReportFlowController extends ChangeNotifier {
       sending = true;
       failure = null;
     });
+    await flushDraftWrites();
+    if (_disposed) return;
     final attempt = Report(
       description: description.trim(),
       latitude: position!.latitude,
@@ -171,6 +259,9 @@ class ReportFlowController extends ChangeNotifier {
       debrisLocation: debris,
       quantity: quantity,
       state: ReportState.submissionUncertain,
+      contact: _safeContact,
+      itemFamily: itemFamily,
+      items: items,
     );
     try {
       if (savedDraft == null) {
@@ -231,6 +322,9 @@ class ReportFlowController extends ChangeNotifier {
             photoPaths: attempt.photoPaths,
             debrisLocation: attempt.debrisLocation,
             quantity: attempt.quantity,
+            contact: attempt.contact,
+            itemFamily: attempt.itemFamily,
+            items: attempt.items,
           );
           try {
             await store.replaceReport(attempt, draft);

@@ -7,13 +7,37 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 void main() {
+  testWidgets('Nearby keeps filter labels visible when fields are empty', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(const MaterialApp(home: NearbyPage()));
+    await tester.pumpAndSettle();
+    expect(find.text('Nearby'), findsNWidgets(2));
+    for (final label in [
+      'Search an area',
+      'Request type',
+      'Neighborhood Council District',
+      'Council District',
+    ]) {
+      final field = tester.widget<TextField>(
+        find.widgetWithText(TextField, label),
+      );
+      expect(
+        field.decoration!.floatingLabelBehavior,
+        FloatingLabelBehavior.always,
+      );
+    }
+    expect(find.text('Street or neighborhood'), findsOneWidget);
+  });
+
   testWidgets('a delayed restore does not overwrite new input', (tester) async {
     final store = _DelayedStore();
     SharedPreferencesStorePlatform.instance = store;
     SharedPreferences.resetStatic();
     await tester.pumpWidget(const MaterialApp(home: NearbyPage()));
     await tester.enterText(
-      find.widgetWithText(TextField, 'Area or address'),
+      find.widgetWithText(TextField, 'Search an area'),
       'New area',
     );
     store.ready.complete({
@@ -32,7 +56,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('No live results'), findsOneWidget);
     await tester.enterText(
-      find.widgetWithText(TextField, 'Area or address'),
+      find.widgetWithText(TextField, 'Search an area'),
       'Hollywood',
     );
     await tester.ensureVisible(find.text('Apply filters'));
@@ -121,7 +145,7 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: NearbyPage()));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Area or address'),
+      find.widgetWithText(TextField, 'Search an area'),
       'Echo Park',
     );
     await tester.ensureVisible(find.text('Apply filters'));
@@ -164,6 +188,27 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Open nearby'), findsOneWidget);
   });
+
+  testWidgets('Nearby uses provided service names in its filter hint', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    await NearbyPage.clearSavedFilters();
+    final catalog = [
+      {'name': 'Street Lighting'},
+      {'name': 'Tree Service'},
+    ];
+    final names = catalog.map((service) => service['name']!).toList();
+    await tester.pumpWidget(MaterialApp(home: NearbyPage(serviceNames: names)));
+    await tester.pumpAndSettle();
+    expect(find.text('All services (e.g. Street Lighting)'), findsOneWidget);
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Request type'),
+      names.last,
+    );
+    expect(find.text('Tree Service'), findsOneWidget);
+  });
+
   testWidgets('clear reports persistent storage failure', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await NearbyPage.clearSavedFilters();

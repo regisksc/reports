@@ -8,6 +8,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:reports/features/report/domain/report.dart';
+import 'package:reports/features/report/domain/illegal_dumping_catalog.dart';
+import 'package:reports/features/report/data/remembered_contact_store.dart';
 import '../application/report_store.dart';
 import '../application/report_flow_controller.dart';
 import 'package:reports/design/reports_design.dart';
@@ -41,6 +43,14 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
   bool _locating = false;
   final _desc = TextEditingController();
   final _qty = TextEditingController();
+  final _first = TextEditingController();
+  final _last = TextEditingController();
+  final _email = TextEditingController();
+  final _phone = TextEditingController();
+  String? _contactStorageError;
+  bool _exiting = false;
+  String _itemQuery = '';
+  bool _showAllItems = false;
   final _scroll = ScrollController();
 
   @override
@@ -54,15 +64,38 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
     );
     _desc.text = _controller.description;
     _qty.text = _controller.quantityText;
+    final contact = _controller.contact;
+    _first.text = contact?.firstName ?? '';
+    _last.text = contact?.lastName ?? '';
+    _email.text = contact?.email ?? '';
+    _phone.text = contact?.phone ?? '';
+    if (widget.draft == null ||
+        (widget.draft!.flowVersion >= 2 && widget.draft!.contact == null)) {
+      _loadRememberedContact();
+    }
     _desc.addListener(_syncInputs);
     _qty.addListener(_syncInputs);
+    for (final field in [_first, _last, _email, _phone]) {
+      field.addListener(_syncInputs);
+    }
     _controller.addListener(_onChanged);
+    _controller.loadItemCatalog();
     _controller.checkSavedAttempts();
   }
 
   void _syncInputs() {
     _controller.description = _desc.text;
     _controller.quantityText = _qty.text;
+    final contact = _controller.contact;
+    if (contact != null && !contact.anonymous) {
+      _controller.contact = ReportContact(
+        anonymous: contact.anonymous,
+        firstName: _first.text,
+        lastName: _last.text,
+        email: _email.text,
+        phone: _phone.text,
+      );
+    }
   }
 
   void _onChanged() {
@@ -78,6 +111,10 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
     _scroll.dispose();
     _desc.dispose();
     _qty.dispose();
+    _first.dispose();
+    _last.dispose();
+    _email.dispose();
+    _phone.dispose();
     super.dispose();
   }
 
@@ -98,11 +135,11 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
   int get _step => _controller.step;
   bool get _editingReview => _controller.editingReview;
   DateTime get _draftCreatedAt => _controller.draftCreatedAt;
-  bool get _locked => _controller.locked;
+  bool get _locked => _controller.locked || _exiting;
   String? get _quantityError => _controller.quantityError;
   int? get _quantity => _controller.quantity;
-  bool get _canSubmit => _controller.canSubmit;
-  bool get _canContinue => _controller.canContinue;
+  bool get _canSubmit => !_exiting && _controller.canSubmit;
+  bool get _canContinue => !_exiting && _controller.canContinue;
 
   void _changeStep(int step, {bool fromReview = false}) {
     FocusScope.of(context).unfocus();
@@ -112,6 +149,137 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
 
   Future<void> _persistDraft() => _controller.persistDraft();
   Future<void> _submit() => _controller.submit();
+
+  Future<void> _leaveAfterPendingWrites() async {
+    if (_exiting) return;
+    setState(() => _exiting = true);
+    await _controller.flushDraftWrites();
+    if (mounted) Navigator.pop(context);
+  }
+
+  Future<void> _leaveReceipt({bool home = false}) async {
+    if (_storageBlocked) {
+      final leave = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Keep your Service Request number'),
+          content: const Text(
+            'This number could not be saved on this device. Copy or write it down before leaving.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Stay here'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Leave'),
+            ),
+          ],
+        ),
+      );
+      if (leave != true || !mounted) return;
+    }
+    if (!home) return _leaveAfterPendingWrites();
+    setState(() => _exiting = true);
+    await _controller.flushDraftWrites();
+    if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _saveAndClose() async {
+    if (_exiting) return;
+    final saving = _persistDraft();
+    setState(() => _exiting = true);
+    await saving;
+    await _controller.flushDraftWrites();
+    if (!mounted) return;
+    if (_draftSaveFailed) {
+      setState(() => _exiting = false);
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
+  Future<void> _discardAfterPendingWrites() async {
+    setState(() => _exiting = true);
+    try {
+      await _controller.flushDraftWrites();
+      await widget.store.discardDraft(_draftCreatedAt);
+    } on Object {
+      if (mounted) setState(() => _exiting = false);
+      rethrow;
+    }
+  }
+
+  Future<void> _loadRememberedContact() async {
+    try {
+      final saved = await const RememberedContactStore().load();
+      if (!mounted ||
+          saved == null ||
+          _controller.contact != null ||
+          _first.text.isNotEmpty ||
+          _last.text.isNotEmpty ||
+          _email.text.isNotEmpty ||
+          _phone.text.isNotEmpty) {
+        return;
+      }
+      setState(() {
+        _first.text = saved.firstName;
+        _last.text = saved.lastName;
+        _email.text = saved.email;
+        _phone.text = saved.phone;
+        _controller.rememberContact = true;
+      });
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _contactStorageError =
+              'Saved contact details could not be loaded.',
+        );
+      }
+    }
+  }
+
+  Future<void> _continue() async {
+    if (_step == 4 &&
+        _controller.rememberContact &&
+        _controller.contact?.anonymous == false) {
+      try {
+        await const RememberedContactStore().save(_controller.contact!);
+      } on Object {
+        if (mounted) {
+          setState(
+            () => _contactStorageError =
+                'Contact details could not be saved for reuse.',
+          );
+        }
+        return;
+      }
+    }
+    if (mounted && !_locked) _changeStep(_editingReview ? 5 : _step + 1);
+  }
+
+  Future<void> _remember(bool value) async {
+    if (!value) {
+      try {
+        await const RememberedContactStore().clear();
+      } on Object {
+        if (mounted) {
+          setState(
+            () => _contactStorageError =
+                'Contact details could not be forgotten.',
+          );
+        }
+        return;
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      _controller.rememberContact = value;
+      _contactStorageError = null;
+    });
+    await _persistDraft();
+  }
 
   Future<void> _pickPhoto(ImageSource source) async {
     if (_locked || _pickingPhoto || _photoPaths.length >= 3) return;
@@ -193,52 +361,86 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : const Duration(milliseconds: 400);
-    const labels = ['Location', 'Items', 'Photos', 'Details', 'Review'];
+    const labels = [
+      'Location',
+      'Items',
+      'Photos',
+      'Details',
+      'Contact',
+      'Review',
+    ];
     const headings = [
       'Where did you spot it?',
       'What’s been left behind?',
       'Have a photo?',
       'Add a little detail.',
+      'How would you like to report?',
       'Looking good? Take a look.',
     ];
     const descriptions = [
       'Choose the dumped items’ location on the map or use your current location.',
       'Tell us where the items are and how many need collecting.',
       'A photo can help tell the story. This step is optional.',
-      'Describe the items and add a nearby landmark or access note.',
+      'Add a nearby landmark or access note if useful. This step is optional.',
+      'It’s your choice. No account is needed.',
       'Check the details before sending your report to MyLA311.',
     ];
     return PopScope<Object?>(
-      canPop: (_step == 0 && !_editingReview) || _locked,
+      canPop:
+          !_exiting &&
+          !_controller.locked &&
+          !_controller.hasPendingDraftWrites &&
+          _step == 0 &&
+          !_editingReview,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && !_locked) {
-          _changeStep(_editingReview ? 4 : _step - 1);
+        if (didPop || _exiting) return;
+        if (number != null) {
+          _leaveReceipt();
+        } else if (!_locked && (_step > 0 || _editingReview)) {
+          _changeStep(_editingReview ? 5 : _step - 1);
+        } else {
+          _leaveAfterPendingWrites();
         }
       },
       child: Scaffold(
         appBar: AppBar(
           leading: BackButton(
             onPressed: () {
-              if ((_step > 0 || _editingReview) && !_locked) {
-                _changeStep(_editingReview ? 4 : _step - 1);
+              if (number != null) {
+                _leaveReceipt();
+              } else if ((_step > 0 || _editingReview) && !_locked) {
+                _changeStep(_editingReview ? 5 : _step - 1);
               } else {
-                Navigator.pop(context);
+                _leaveAfterPendingWrites();
               }
             },
           ),
           actions: [
+            if (!_locked)
+              if (MediaQuery.sizeOf(context).width < 360 ||
+                  MediaQuery.textScalerOf(context).scale(1) > 1.3)
+                IconButton(
+                  onPressed: _saveAndClose,
+                  tooltip: 'Save and close',
+                  icon: const Icon(Icons.save_outlined),
+                )
+              else
+                TextButton(
+                  onPressed: _saveAndClose,
+                  child: const Text('Save and close'),
+                ),
             if (!_locked && _savedDraft == null)
               IconButton(
                 tooltip: 'Discard draft',
                 onPressed: () => confirmLocalRemoval(
                   context,
                   title: 'Discard draft?',
-                  remove: () => widget.store.discardDraft(_draftCreatedAt),
+                  remove: _discardAfterPendingWrites,
                 ),
                 icon: const Icon(Icons.close),
               ),
           ],
-          title: const Text('Report illegal dumping'),
+          title: const Text('New report'),
         ),
         body: SafeArea(
           child: Center(
@@ -251,12 +453,12 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                   children: [
                     Text(
-                      'Step ${_step + 1} of 5 · ${labels[_step]}',
+                      'Step ${_step + 1} of 6 · ${labels[_step]}',
                       style: theme.textTheme.labelMedium,
                     ),
                     const SizedBox(height: 10),
                     TweenAnimationBuilder<double>(
-                      tween: Tween(end: (_step + 1) / 5),
+                      tween: Tween(end: (_step + 1) / 6),
                       duration: duration,
                       builder: (context, value, child) =>
                           LinearProgressIndicator(
@@ -349,6 +551,7 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
                             1 => _itemsStep(),
                             2 => _photoStep(),
                             3 => _detailsStep(),
+                            4 => _contactStep(),
                             _ => _reviewStep(),
                           },
                         ),
@@ -390,12 +593,9 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
                     ),
                   ),
                   child: FilledButton(
-                    onPressed: _step == 4
+                    onPressed: _step == 5
                         ? (_canSubmit ? _submit : null)
-                        : (_canContinue
-                              ? () =>
-                                    _changeStep(_editingReview ? 4 : _step + 1)
-                              : null),
+                        : (_canContinue ? _continue : null),
                     child: _sending
                         ? const SizedBox(
                             height: 24,
@@ -405,7 +605,7 @@ class _ReportFlowPageState extends State<ReportFlowPage> {
                         : Text(
                             _editingReview
                                 ? 'Save changes'
-                                : _step == 4
+                                : _step == 5
                                 ? (_savedDraft == null ? 'Submit' : 'Retry')
                                 : (_step == 2 && _photoPaths.isEmpty
                                       ? 'Skip photo'

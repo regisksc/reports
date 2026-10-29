@@ -16,6 +16,65 @@ const _shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
 
 void main() {
   testWidgets(
+    'shared receipt includes selected items without private contact',
+    (tester) async {
+      final shared = <MethodCall>[];
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(_shareChannel, (call) async {
+        shared.add(call);
+        return '';
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(_shareChannel, null),
+      );
+      final report = Report(
+        createdAt: DateTime.utc(2026, 10, 22, 16, 30),
+        description: 'Two items beside the curb',
+        latitude: 34.05,
+        longitude: -118.24,
+        state: ReportState.submitted,
+        serviceRequestNumber: 'SR-SYNTHETIC-ITEMS',
+        debrisLocation: 'Curb',
+        quantity: 99,
+        itemFamily: 'Electronic Waste',
+        items: const [
+          ReportItem(name: 'Computers', quantity: '2', location: 'Curb'),
+          ReportItem(name: 'TVs', quantity: '1', location: 'Alley'),
+        ],
+        contact: const ReportContact(
+          anonymous: false,
+          firstName: 'River',
+          lastName: 'Test',
+          email: 'river@example.com',
+          phone: '2135550100',
+        ),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ReportDetailPage(store: testStore, report: report),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('Share receipt'), 250);
+      await tester.tap(find.text('Share receipt'));
+      await tester.pumpAndSettle();
+      final arguments = shared.single.arguments as Map;
+      expect(
+        arguments['text'],
+        'MyLA311 illegal-dumping receipt\n'
+        'Service Request: SR-SYNTHETIC-ITEMS\n'
+        'Status: Submitted\n'
+        'Description: Two items beside the curb\n'
+        'Coordinates: 34.050000, -118.240000\n'
+        'Material: Electronic Waste\n'
+        '2 × Computers · Curb\n'
+        '1 × TVs · Alley\n'
+        'Created: 10/22/2026 · 9:30 AM PDT (UTC-07:00)',
+      );
+    },
+  );
+
+  testWidgets(
     'a confirmed receipt copies exactly and dismissal preserves saved data',
     (tester) async {
       final support = Directory(

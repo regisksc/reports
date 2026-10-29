@@ -13,7 +13,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Services'), findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(AppBar), matching: find.text('Services')),
+      findsOneWidget,
+    );
     await tester.enterText(find.byType(TextField), 'Illegal Dumping');
     await tester.pumpAndSettle();
     await tester.tap(find.text('Illegal Dumping Item Pickup'));

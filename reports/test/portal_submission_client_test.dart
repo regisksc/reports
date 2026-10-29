@@ -10,6 +10,7 @@ import 'package:http/testing.dart';
 import 'package:image/image.dart' as image;
 import 'package:reports/features/report/data/portal_submission_client.dart';
 import 'package:reports/features/report/domain/report.dart';
+import 'package:reports/features/report/domain/illegal_dumping_catalog.dart';
 
 const _homePage =
     '<html><head><script>window.Aura = {"mode":"PROD","fwuid":"fixture-fwuid",'
@@ -89,12 +90,27 @@ Map<String, Object?> _question(
   bool display = false,
 }) => {
   'sFieldtoUpdate': field,
+  'sQuestionId': field ?? 'section-$order',
+  'sParentQuestionId': null,
+  'sParentAnswer': '',
   'sQuestion': field ?? 'Section heading',
   'sQuestionType': type,
   'iOrder': order,
   'brequired': false,
   'sDisplay': display,
   'sAnswer': answer,
+};
+
+Map<String, Object?> _childQuestion(
+  String field,
+  num order,
+  String type,
+  String parent,
+  String answer,
+) => {
+  ..._question(field, order, type),
+  'sParentQuestionId': parent,
+  'sParentAnswer': answer,
 };
 
 Map<String, Object?> _requestTypes() => {
@@ -123,21 +139,32 @@ Map<String, Object?> _caseTypeDetails() => {
     'lstBeforeCaseQuestion': <Object>[],
     'lstCaseQuestion': [
       _question('Description', 9, 'TextArea'),
-      _question(
-        'Residential_Commercial__c',
-        1,
-        'Picklist',
-        answer: 'Residential',
-        display: true,
-      ),
+      {
+        ..._question(
+          'Residential_Commercial__c',
+          1,
+          'Picklist',
+          answer: 'Residential',
+          display: true,
+        ),
+        'sDefaultValue': 'Residential',
+        'sReadOnly': true,
+        'sHidden': true,
+      },
       _question(null, 2, 'Section'),
       _question('Owner_Phone_Number__c', 3.5, 'Phone'),
-      _question(
-        'Provide_Information_On_Suspect__c',
-        4,
-        'Picklist',
-        display: true,
-      ),
+      {
+        ..._question(
+          'Provide_Information_On_Suspect__c',
+          4,
+          'Picklist',
+          display: true,
+        ),
+        'lstOptions': [
+          {'value': 'Yes'},
+          {'value': 'No'},
+        ],
+      },
       _question('Illegally_Dumped_Item_Type__c', 5.0, 'Picklist'),
       _question('Illegally_Dumped_Pickup_Options__c', 6, 'MultiPicklist'),
       _question('Location_of_Loose_Miscellaneous_Debris__c', 7.9, 'Picklist'),
@@ -279,6 +306,7 @@ class _OfflineHttpClient implements HttpClient {
 final _logged = <String>[];
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('PortalSubmissionClient', () {
     late DebugPrintCallback originalDebugPrint;
 
@@ -293,6 +321,501 @@ void main() {
     tearDown(() {
       debugPrint = originalDebugPrint;
     });
+    test(
+      'invalid selected item is rejected before any portal requests',
+      () async {
+        final portal = _FakePortal(_happyReplies());
+        final report = Report(
+          description: '',
+          latitude: 34.05,
+          longitude: -118.25,
+          createdAt: DateTime(2026),
+          itemFamily: 'Bulky Items',
+          items: [
+            const ReportItem(
+              name: 'Not a City option',
+              quantity: '1',
+              location: 'Curb',
+            ),
+          ],
+        );
+        final result = await PortalSubmissionClient(
+          httpClient: portal.client,
+        ).send(report);
+        expect(
+          result,
+          isA<SubmissionFailed>().having(
+            (value) => value.kind,
+            'kind',
+            SubmissionFailureKind.rejected,
+          ),
+        );
+        expect(portal.requests, isEmpty);
+      },
+    );
+
+    test('changed City item questions block a reviewed payload', () async {
+      final config = Map<String, Object?>.from(
+        _caseTypeDetails()['objCaseConfigWrapper'] as Map,
+      );
+      final report = Report(
+        description: '',
+        latitude: 34.05,
+        longitude: -118.25,
+        createdAt: DateTime(2026),
+        itemFamily: 'Bulky Items',
+        items: [
+          const ReportItem(
+            name: 'Bed Frame (Wood)',
+            quantity: '1',
+            location: 'Curb',
+          ),
+        ],
+      );
+      await expectLater(
+        PortalSubmissionClient().prepareInspectorSubmission(
+          report,
+          fwuid: 'fixture',
+          appId: 'fixture',
+          caseTypeId: 'fixture',
+          requestCount: 1,
+          config: config,
+          contact: {},
+          address: _cityHallAddress(),
+          addressStatus: 'Verified',
+        ),
+        throwsFormatException,
+      );
+    });
+
+    test('changed City questions cannot dispatch a submission', () async {
+      final portal = _FakePortal(_happyReplies());
+      final report = Report(
+        description: '',
+        latitude: 34.05,
+        longitude: -118.25,
+        createdAt: DateTime(2026),
+        itemFamily: 'Bulky Items',
+        items: [
+          const ReportItem(
+            name: 'Bed Frame (Wood)',
+            quantity: '1',
+            location: 'Curb',
+          ),
+        ],
+      );
+      final result = await PortalSubmissionClient(
+        httpClient: portal.client,
+      ).send(report);
+      expect(
+        result,
+        isA<SubmissionFailed>().having(
+          (value) => value.kind,
+          'kind',
+          SubmissionFailureKind.rejected,
+        ),
+      );
+      expect(
+        portal.calls.map((call) => call.method),
+        isNot(contains('submitCase')),
+      );
+    });
+
+    test(
+      'changed parent is rejected and duplicate field only answers the selected branch',
+      () async {
+        final config = Map<String, Object?>.from(
+          _caseTypeDetails()['objCaseConfigWrapper'] as Map,
+        );
+        final questions = List<Object?>.from(config['lstCaseQuestion'] as List);
+        final type = questions.whereType<Map<String, Object?>>().singleWhere(
+          (question) =>
+              question['sFieldtoUpdate'] == 'Illegally_Dumped_Item_Type__c',
+        );
+        type['sParentQuestionId'] = 'Provide_Information_On_Suspect__c';
+        type['sParentAnswer'] = 'Yes;No';
+        type['lstOptions'] = [
+          {'value': 'Bulky Items'},
+        ];
+        const selectionField = 'Illegally_Dumped_Other_Item_Options__c';
+        final quantity = _childQuestion(
+          'No_of_Bedframe_Wood__c',
+          13,
+          'NumberIncrement',
+          'wrong-parent',
+          'Bed Frame (Wood)',
+        );
+        questions.addAll([
+          {
+            ..._childQuestion(
+              selectionField,
+              11,
+              'MultiPicklist',
+              'Illegally_Dumped_Item_Type__c',
+              'Bulky Items',
+            ),
+            'lstOptions': [
+              {'value': 'Bed Frame (Wood)'},
+            ],
+          },
+          {
+            ..._childQuestion(
+              'Location_of_Bed_Frame_Wood__c',
+              12,
+              'Picklist',
+              selectionField,
+              'Bed Frame (Wood)',
+            ),
+            'lstOptions': [
+              {'value': 'Curb'},
+            ],
+          },
+          quantity,
+        ]);
+        config['lstCaseQuestion'] = questions;
+        final report = Report(
+          description: 'Fixture description',
+          latitude: 34.05,
+          longitude: -118.25,
+          createdAt: DateTime(2026),
+          itemFamily: 'Bulky Items',
+          items: [
+            const ReportItem(
+              name: 'Bed Frame (Wood)',
+              quantity: '2',
+              location: 'Curb',
+            ),
+          ],
+        );
+        Future<PortalPreparedSubmission> prepare() =>
+            PortalSubmissionClient().prepareInspectorSubmission(
+              report,
+              fwuid: 'fixture',
+              appId: 'fixture',
+              caseTypeId: 'fixture',
+              requestCount: 1,
+              config: config,
+              contact: {},
+              address: _cityHallAddress(),
+              addressStatus: 'Verified',
+            );
+        await expectLater(prepare(), throwsFormatException);
+        quantity['sParentQuestionId'] = selectionField;
+        questions.add({
+          ..._childQuestion(
+            'No_of_Bedframe_Wood__c',
+            14,
+            'NumberIncrement',
+            'other-parent',
+            'Other',
+          ),
+          'sQuestionId': 'other-branch',
+        });
+        questions.add({
+          ..._childQuestion(
+            'Description',
+            15,
+            'TextArea',
+            'other-parent',
+            'Other',
+          ),
+          'sQuestionId': 'other-description',
+        });
+        final plan = await prepare();
+        final params =
+            jsonDecode(plan.actionParamsJson) as Map<String, dynamic>;
+        final payload =
+            jsonDecode(params['sCaseQuestionJSON'] as String)
+                as Map<String, dynamic>;
+        final entries = (payload['lstCaseQuestion'] as List)
+            .cast<Map<String, dynamic>>();
+        expect(
+          entries.singleWhere(
+            (question) => question['sQuestionId'] == 'No_of_Bedframe_Wood__c',
+          )['sAnswer'],
+          '2',
+        );
+        final other = entries.singleWhere(
+          (question) => question['sQuestionId'] == 'other-branch',
+        );
+        expect(other['sAnswer'], '');
+        expect(other['sDisplay'], isFalse);
+        final otherDescription = entries.singleWhere(
+          (question) => question['sQuestionId'] == 'other-description',
+        );
+        expect(otherDescription['sAnswer'], '');
+        expect(otherDescription['sDisplay'], isFalse);
+        quantity['sQuestionId'] = 'other-branch';
+        await expectLater(prepare(), throwsFormatException);
+        quantity['sQuestionId'] = null;
+        await expectLater(prepare(), throwsFormatException);
+        quantity['sQuestionId'] = 'No_of_Bedframe_Wood__c';
+        final suspect = questions.whereType<Map<String, Object?>>().singleWhere(
+          (question) =>
+              question['sFieldtoUpdate'] == 'Provide_Information_On_Suspect__c',
+        );
+        suspect['sParentQuestionId'] = 'new-parent';
+        await expectLater(prepare(), throwsFormatException);
+      },
+    );
+
+    test(
+      'each item family uses its captured selection and detail fields',
+      () async {
+        final catalog = await IllegalDumpingCatalog.load();
+        for (final family in catalog.families) {
+          final item = family.items.first;
+          final config = Map<String, Object?>.from(
+            _caseTypeDetails()['objCaseConfigWrapper'] as Map,
+          );
+          final questions = List<Object?>.from(
+            config['lstCaseQuestion'] as List,
+          );
+          final type = questions.whereType<Map<String, Object?>>().singleWhere(
+            (question) =>
+                question['sFieldtoUpdate'] == 'Illegally_Dumped_Item_Type__c',
+          );
+          type['sParentQuestionId'] = 'Provide_Information_On_Suspect__c';
+          type['sParentAnswer'] = 'Yes;No';
+          type['lstOptions'] = [
+            {'value': family.name},
+          ];
+          questions.removeWhere(
+            (question) =>
+                question is Map &&
+                [
+                  family.selectionField,
+                  item.locationField,
+                  item.quantityField,
+                ].contains(question['sFieldtoUpdate']),
+          );
+          questions.addAll([
+            {
+              ..._childQuestion(
+                family.selectionField,
+                11,
+                'MultiPicklist',
+                'Illegally_Dumped_Item_Type__c',
+                family.name,
+              ),
+              'lstOptions': [
+                {'value': item.name},
+              ],
+            },
+            {
+              ..._childQuestion(
+                item.locationField,
+                12,
+                'Picklist',
+                family.selectionField,
+                item.name,
+              ),
+              'lstOptions': [
+                {'value': 'Curb'},
+              ],
+            },
+            _childQuestion(
+              item.quantityField,
+              13,
+              'NumberIncrement',
+              family.selectionField,
+              item.name,
+            ),
+          ]);
+          config['lstCaseQuestion'] = questions;
+          final report = Report(
+            description: '',
+            latitude: 34.05,
+            longitude: -118.25,
+            createdAt: DateTime(2026),
+            itemFamily: family.name,
+            items: [
+              ReportItem(name: item.name, quantity: '4', location: 'Curb'),
+            ],
+          );
+          final plan = await PortalSubmissionClient()
+              .prepareInspectorSubmission(
+                report,
+                fwuid: 'fixture',
+                appId: 'fixture',
+                caseTypeId: 'fixture',
+                requestCount: 1,
+                config: config,
+                contact: {},
+                address: _cityHallAddress(),
+                addressStatus: 'Verified',
+              );
+          final params =
+              jsonDecode(plan.actionParamsJson) as Map<String, dynamic>;
+          final payload =
+              jsonDecode(params['sCaseQuestionJSON'] as String)
+                  as Map<String, dynamic>;
+          final answers = {
+            for (final question in payload['lstCaseQuestion'] as List)
+              question['sFieldtoUpdate']: question['sAnswer'],
+          };
+          expect(answers[family.selectionField], item.name);
+          expect(answers[item.locationField], 'Curb');
+          expect(answers[item.quantityField], '4');
+        }
+      },
+    );
+
+    test(
+      'selected items use verified City fields in reviewed payload',
+      () async {
+        final config = Map<String, Object?>.from(
+          _caseTypeDetails()['objCaseConfigWrapper'] as Map,
+        );
+        final questions = List<Object?>.from(config['lstCaseQuestion'] as List);
+        final typeQuestion = questions
+            .whereType<Map<String, Object?>>()
+            .singleWhere(
+              (question) =>
+                  question['sFieldtoUpdate'] == 'Illegally_Dumped_Item_Type__c',
+            );
+        typeQuestion['sParentQuestionId'] = 'Provide_Information_On_Suspect__c';
+        typeQuestion['sParentAnswer'] = 'Yes;No';
+        typeQuestion['lstOptions'] = [
+          {'value': 'Bulky Items'},
+        ];
+        questions.addAll([
+          {
+            ..._childQuestion(
+              'Illegally_Dumped_Other_Item_Options__c',
+              11,
+              'MultiPicklist',
+              'Illegally_Dumped_Item_Type__c',
+              'Bulky Items',
+            ),
+            'lstOptions': [
+              {'value': 'Bed Frame (Wood)'},
+              {'value': 'Basketball Set'},
+            ],
+          },
+          {
+            ..._childQuestion(
+              'Location_of_Bed_Frame_Wood__c',
+              12,
+              'Picklist',
+              'Illegally_Dumped_Other_Item_Options__c',
+              'Bed Frame (Wood)',
+            ),
+            'lstOptions': [
+              {'value': 'Curb'},
+            ],
+          },
+          _childQuestion(
+            'No_of_Bedframe_Wood__c',
+            13,
+            'NumberIncrement',
+            'Illegally_Dumped_Other_Item_Options__c',
+            'Bed Frame (Wood)',
+          ),
+          {
+            ..._childQuestion(
+              'Location_of_Basketball_Set__c',
+              14,
+              'Picklist',
+              'Illegally_Dumped_Other_Item_Options__c',
+              'Basketball Set',
+            ),
+            'lstOptions': [
+              {'value': 'Alley'},
+            ],
+          },
+          _childQuestion(
+            'No_of_Basketball_Set__c',
+            15,
+            'NumberIncrement',
+            'Illegally_Dumped_Other_Item_Options__c',
+            'Basketball Set',
+          ),
+        ]);
+        config['lstCaseQuestion'] = questions;
+        final report = Report(
+          description: '',
+          latitude: 34.05,
+          longitude: -118.25,
+          createdAt: DateTime(2026),
+          itemFamily: 'Bulky Items',
+          items: [
+            const ReportItem(
+              name: 'Bed Frame (Wood)',
+              quantity: '2',
+              location: 'Curb',
+            ),
+            const ReportItem(
+              name: 'Basketball Set',
+              quantity: '3',
+              location: 'Alley',
+            ),
+          ],
+        );
+        final plan = await PortalSubmissionClient().prepareInspectorSubmission(
+          report,
+          fwuid: 'fixture',
+          appId: 'fixture',
+          caseTypeId: 'fixture',
+          requestCount: 1,
+          config: config,
+          contact: {},
+          address: _cityHallAddress(),
+          addressStatus: 'Verified',
+        );
+        final params =
+            jsonDecode(plan.actionParamsJson) as Map<String, dynamic>;
+        final payload =
+            jsonDecode(params['sCaseQuestionJSON'] as String)
+                as Map<String, dynamic>;
+        final answers = {
+          for (final question in payload['lstCaseQuestion'] as List)
+            question['sFieldtoUpdate']: question['sAnswer'],
+        };
+        expect(answers['Illegally_Dumped_Item_Type__c'], 'Bulky Items');
+        expect(
+          answers['Illegally_Dumped_Other_Item_Options__c'],
+          'Bed Frame (Wood);Basketball Set',
+        );
+        expect(answers['Location_of_Bed_Frame_Wood__c'], 'Curb');
+        expect(answers['No_of_Bedframe_Wood__c'], '2');
+        expect(answers['Location_of_Basketball_Set__c'], 'Alley');
+        expect(answers['No_of_Basketball_Set__c'], '3');
+      },
+    );
+
+    test('named contact reaches the production submission payload', () async {
+      final portal = _FakePortal(_happyReplies());
+      final report = Report(
+        description: 'Couch',
+        latitude: 34.05,
+        longitude: -118.25,
+        createdAt: DateTime(2026),
+        debrisLocation: 'Curb',
+        quantity: 1,
+        contact: const ReportContact(
+          anonymous: false,
+          firstName: 'Ada',
+          lastName: 'Jones',
+          email: 'ada@example.com',
+          phone: '5551234567',
+        ),
+      );
+      await PortalSubmissionClient(httpClient: portal.client).send(report);
+      final contact =
+          jsonDecode(
+                portal.callTo('submitCase').params['sObjContact'] as String,
+              )
+              as Map<String, dynamic>;
+      expect(contact['isAnonymously'], false);
+      expect(contact['sFirstName'], 'Ada');
+      expect(contact['sLastName'], 'Jones');
+      expect(contact['sEmail'], 'ada@example.com');
+      expect(contact['sPhone'], '5551234567');
+      expect(_logged.join(' '), isNot(contains('ada@example.com')));
+      expect(_logged.join(' '), isNot(contains('5551234567')));
+    });
+
     test(
       'happy path returns the Service Request number from submitCase',
       () async {

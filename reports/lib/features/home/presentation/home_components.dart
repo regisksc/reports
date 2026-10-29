@@ -1,100 +1,59 @@
 part of 'home_screen.dart';
 
-class _InformationPage extends StatelessWidget {
-  const _InformationPage({required this.store});
-  final ReportStore store;
+class _ReportsWordmark extends StatelessWidget {
+  const _ReportsWordmark();
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(144),
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'REPORTS · MYLA311',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ),
-                    devApiPill(context, store: store),
-                  ],
-                ),
-              ),
-              AppBar(primary: false, title: const Text('Help')),
-            ],
-          ),
-        ),
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              Text(
-                'Good to know',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 12),
-              const Text('A little care makes a cleaner neighborhood.'),
-              const SizedBox(height: 24),
-              for (final (icon, title, description) in const [
-                (
-                  Icons.send_outlined,
-                  'Reports go to MyLA311',
-                  'Review every detail before you submit. This app sends real illegal dumping reports to the City of Los Angeles.',
-                ),
-                (
-                  Icons.person_outline_rounded,
-                  'No account needed',
-                  'Reports are anonymous. Your location, description, item details, and any photo you add are sent to MyLA311.',
-                ),
-                (
-                  Icons.photo_camera_outlined,
-                  'Photos are optional',
-                  'If it is safe, take a clear photo of the dumped items. Never put yourself at risk to make a report.',
-                ),
-                (
-                  Icons.confirmation_number_outlined,
-                  'Keep your Service Request number',
-                  'Saved reports stay on this device. A submitted receipt confirms acceptance, not cleanup progress. If a submission is unconfirmed, check with 311 before sending again.',
-                ),
-              ])
-                Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(icon, color: ReportsStyle.orangeDark, size: 28),
-                        const SizedBox(height: 12),
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(description),
-                      ],
-                    ),
+  Widget build(BuildContext context) => Semantics(
+    key: const ValueKey('reports-brand-logo'),
+    label: 'Reports',
+    image: true,
+    excludeSemantics: true,
+    child: SizedBox(
+      width: 150,
+      height: 42,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32,
+              height: 34,
+              decoration: BoxDecoration(
+                color: ReportsStyle.orange,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: const [
+                  BoxShadow(
+                    color: ReportsStyle.orangeDark,
+                    offset: Offset(0, 3),
                   ),
-                ),
-            ],
-          ),
+                ],
+              ),
+              child: const Icon(
+                Icons.location_on_outlined,
+                size: 20,
+                color: ReportsStyle.ink,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'reports.',
+              textScaler: TextScaler.noScaling,
+              style: TextStyle(
+                fontFamily: 'Mona Sans',
+                fontSize: 26,
+                height: 1,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -1.2,
+              ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _HomeResumeCard extends StatelessWidget {
@@ -112,9 +71,12 @@ class _HomeResumeCard extends StatelessWidget {
         : _savedLocationSummary(draft.latitude, draft.longitude);
     final description = (draft?.description ?? report!.description).trim();
     final summary = description.isEmpty ? location : description;
+    final step = draft != null && draft.flowVersion < 2 && draft.step >= 4
+        ? 5
+        : draft?.step ?? 0;
     final detail = draft == null
         ? '$summary · Do not resend'
-        : '$summary · Step ${draft.step.clamp(0, 4) + 1} of 5';
+        : '$summary · Step ${step.clamp(0, 5) + 1} of 6';
     final stateColor = draft == null
         ? ReportsStyle.orangeDark
         : ReportsStyle.ink;
@@ -218,7 +180,16 @@ class _HomeAction extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, size: 28, color: ReportsStyle.ink),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: ReportsStyle.surface,
+                    border: Border.all(color: ReportsStyle.border, width: 2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 28, color: ReportsStyle.ink),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   title,

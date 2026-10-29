@@ -117,7 +117,7 @@ void main() {
 
     final card = find.byKey(const Key('home-resume-card'));
     expect(find.text('DRAFT'), findsOneWidget);
-    expect(find.text('Mattress beside the curb · Step 3 of 5'), findsOneWidget);
+    expect(find.text('Mattress beside the curb · Step 3 of 6'), findsOneWidget);
     expect(
       tester.getRect(card).width,
       tester.getRect(find.byKey(const Key('home-hero'))).width,
@@ -128,7 +128,7 @@ void main() {
     );
     await _pumpUntil(
       tester,
-      () => find.text('Step 3 of 5 · Photos').evaluate().isNotEmpty,
+      () => find.text('Step 3 of 6 · Photos').evaluate().isNotEmpty,
     );
 
     expect(find.byType(ReportFlowPage), findsOneWidget);

@@ -3,7 +3,7 @@ part of 'portal_submission_client.dart';
 Future<List<_Json>> _validatedPhotos(Report report) async {
   final location = report.debrisLocation;
   final quantity = report.quantity;
-  if (location == null || quantity == null) {
+  if (report.itemFamily == null && (location == null || quantity == null)) {
     throw const _Failure(
       SubmissionFailureKind.rejected,
       'Missing debris details',

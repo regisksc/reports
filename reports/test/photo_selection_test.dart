@@ -246,6 +246,9 @@ void main() {
           .toList();
       await _continue(tester);
       await _continue(tester);
+      await tester.tap(find.text('Without contact details'));
+      await tester.pumpAndSettle();
+      await _continue(tester);
       outcomes['reviewPhotoLabelCount'] = find
           .text('3 photos attached')
           .evaluate()
@@ -387,12 +390,21 @@ void main() {
     ];
     final draft = {...legacyDraft, 'photoPaths': photos};
     final receipt = {...legacyReceipt, 'photoPaths': photos};
-    expect(ReportDraft.fromJson(draft).toJson(), draft);
+    final migrated = {
+      ...draft,
+      'flowVersion': 2,
+      'contact': const ReportContact(anonymous: true).toJson(),
+    };
+    expect(ReportDraft.fromJson(draft).toJson(), migrated);
     expect(
       Report.fromJson(receipt).submittedWith('SR-SYNTHETIC-PHOTOS').toJson(),
       receipt,
     );
-    expect(ReportDraft.fromJson(legacyDraft).toJson(), legacyDraft);
+    expect(ReportDraft.fromJson(legacyDraft).toJson(), {
+      ...legacyDraft,
+      'flowVersion': 2,
+      'contact': const ReportContact(anonymous: true).toJson(),
+    });
     expect(Report.fromJson(legacyReceipt).toJson(), legacyReceipt);
   });
 
@@ -444,7 +456,8 @@ void main() {
         return _syntheticReply(request);
       }),
     );
-    await tester.pumpWidget(app.ReportApp(client: client));
+    final tracking = _TrackingStore();
+    await tester.pumpWidget(app.ReportApp(client: client, store: tracking));
     await _waitFor(
       tester,
       () => _homeResumeContinueButton().evaluate().isNotEmpty,
@@ -465,12 +478,24 @@ void main() {
     await tester.tap(find.text('Remove photo'));
     await tester.pumpAndSettle();
     expect(find.byType(Image), findsNothing);
-    final retained = await tester.runAsync(testStore.loadDraft);
-    expect(retained!.toJson(), {
-      ...draft.toJson(),
-      'photoPath': null,
-      'step': 2,
-    });
+    for (var turn = 0; turn < 1000; turn++) {
+      await tester.pump();
+      if (tracking.lastSaved?.photoPaths.isEmpty == true &&
+          tracking.lastSaved?.step == 2) {
+        break;
+      }
+      await tester.runAsync(() => Future<void>(() {}));
+    }
+    final retained = tracking.lastSaved;
+    expect(retained, isNotNull);
+    expect(retained!.photoPaths, isEmpty);
+    expect(retained.description, draft.description);
+    expect(retained.latitude, draft.latitude);
+    expect(retained.longitude, draft.longitude);
+    expect(retained.debrisLocation, draft.debrisLocation);
+    expect(retained.quantity, draft.quantity);
+    expect(retained.step, 2);
+    expect(retained.contact!.anonymous, isTrue);
     expect(photo.existsSync(), isTrue);
     await tester.tap(find.widgetWithText(FilledButton, 'Save changes'));
     await tester.pumpAndSettle();
@@ -614,6 +639,8 @@ void main() {
       final retained = await tester.runAsync(testStore.loadDraft);
       expect(retained!.toJson(), {
         ...draft.toJson(),
+        'flowVersion': 2,
+        'contact': const ReportContact(anonymous: true).toJson(),
         'photoPath': image.file.path,
       });
       picker.pending = null;
@@ -648,6 +675,9 @@ void main() {
             .text,
         draft.description,
       );
+      await _continue(tester);
+      await tester.tap(find.text('Without contact details'));
+      await tester.pumpAndSettle();
       await _continue(tester);
       expect(find.text('2 items · Curb'), findsOneWidget);
       expect(find.text('Photo attached'), findsOneWidget);
@@ -804,4 +834,13 @@ http.Response _syntheticReply(http.Request request) {
     }),
     200,
   );
+}
+
+class _TrackingStore extends LocalReportStore {
+  ReportDraft? lastSaved;
+  @override
+  Future<void> saveDraft(ReportDraft draft) async {
+    await super.saveDraft(draft);
+    lastSaved = draft;
+  }
 }

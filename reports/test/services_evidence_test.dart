@@ -36,7 +36,7 @@ void main() {
     await tester.tap(find.text('Remove sample evidence'));
     await tester.pumpAndSettle();
     expect(find.text('1 sample evidence'), findsNothing);
-    await tester.tap(find.text('Back step'));
+    await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
     expect(find.text('Place it on the map.'), findsOneWidget);
   });

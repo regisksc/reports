@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geocoding_platform_interface/geocoding_platform_interface.dart'
@@ -199,6 +200,10 @@ void main() {
     'a resident chooses a map point that reaches Review and the City contract',
     (tester) async {
       SharedPreferences.setMockInitialValues({});
+      rootBundle.evict('assets/illegal_dumping_items.json');
+      await tester.runAsync(
+        () => rootBundle.loadString('assets/illegal_dumping_items.json'),
+      );
       final portal = _SyntheticPortal();
       await tester.pumpWidget(
         MaterialApp(
@@ -334,12 +339,30 @@ void main() {
       expect(tester.widget<FilledButton>(continueButton).onPressed, isNotNull);
       await tester.tap(continueButton);
       await tester.pumpAndSettle();
-      expect(find.text('Step 2 of 5 · Items'), findsOneWidget);
+      expect(find.text('Step 2 of 6 · Items'), findsOneWidget);
+      await _waitFor(
+        tester,
+        () => find.text('Loose / miscellaneous debris').evaluate().isNotEmpty,
+      );
+      await tester.ensureVisible(find.text('Loose / miscellaneous debris'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Loose / miscellaneous debris'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byType(DropdownButtonFormField<String>),
+        150,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
       await tester.tap(find.byType(DropdownButtonFormField<String>));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Curb').last);
       await tester.pumpAndSettle();
-      await tester.enterText(find.byKey(const Key('report-quantity')), '1');
+      await tester.enterText(
+        find.byKey(const Key('item-quantity-Loose/Miscellaneous Debris')),
+        '1',
+      );
       await tester.pump();
       await tester.tap(continueButton);
       await tester.pumpAndSettle();
@@ -350,6 +373,10 @@ void main() {
         'Synthetic map contract test',
       );
       await tester.pump();
+      await tester.tap(continueButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Without contact details'));
+      await tester.pumpAndSettle();
       await tester.tap(continueButton);
       await tester.pumpAndSettle();
       final coordinates =
@@ -379,6 +406,10 @@ void main() {
     'a resident can search an address or intersection before Review',
     (tester) async {
       SharedPreferences.setMockInitialValues({});
+      rootBundle.evict('assets/illegal_dumping_items.json');
+      await tester.runAsync(
+        () => rootBundle.loadString('assets/illegal_dumping_items.json'),
+      );
       final portal = _SyntheticPortal();
       await tester.pumpWidget(
         MaterialApp(
@@ -482,12 +513,30 @@ void main() {
       await tester.pumpAndSettle();
       lookup.pending.complete([gc.Location(latitude: 36, longitude: -120)]);
       await tester.pumpAndSettle();
-      expect(find.text('Step 2 of 5 · Items'), findsOneWidget);
+      expect(find.text('Step 2 of 6 · Items'), findsOneWidget);
+      await _waitFor(
+        tester,
+        () => find.text('Loose / miscellaneous debris').evaluate().isNotEmpty,
+      );
+      await tester.ensureVisible(find.text('Loose / miscellaneous debris'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Loose / miscellaneous debris'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byType(DropdownButtonFormField<String>),
+        150,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
       await tester.tap(find.byType(DropdownButtonFormField<String>));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Curb').last);
       await tester.pumpAndSettle();
-      await tester.enterText(find.byKey(const Key('report-quantity')), '1');
+      await tester.enterText(
+        find.byKey(const Key('item-quantity-Loose/Miscellaneous Debris')),
+        '1',
+      );
       await tester.pump();
       await tester.tap(continueButton);
       await tester.pumpAndSettle();
@@ -498,6 +547,10 @@ void main() {
         'Synthetic intersection lookup test',
       );
       await tester.pump();
+      await tester.tap(continueButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Without contact details'));
+      await tester.pumpAndSettle();
       await tester.tap(continueButton);
       await tester.pumpAndSettle();
       expect(find.text('34.061235, -118.245679'), findsOneWidget);
@@ -552,7 +605,74 @@ class _SyntheticPortal {
         payload = {
           'objCaseConfigWrapper': {
             'sCaseType': 'Illegal Dumping Item Pickup',
-            'lstCaseQuestion': <Object>[],
+            'lstCaseQuestion': [
+              {
+                'sQuestionId': 'residential',
+                'sFieldtoUpdate': 'Residential_Commercial__c',
+                'sQuestionType': 'Picklist',
+                'sParentQuestionId': null,
+                'sParentAnswer': '',
+                'sAnswer': 'Residential',
+                'sDefaultValue': 'Residential',
+                'sReadOnly': true,
+                'sHidden': true,
+              },
+              {
+                'sQuestionId': 'suspect',
+                'sFieldtoUpdate': 'Provide_Information_On_Suspect__c',
+                'sQuestionType': 'Picklist',
+                'sParentQuestionId': null,
+                'sParentAnswer': '',
+                'lstOptions': [
+                  {'value': 'No'},
+                ],
+              },
+              {
+                'sQuestionId': 'family',
+                'sFieldtoUpdate': 'Illegally_Dumped_Item_Type__c',
+                'sQuestionType': 'Picklist',
+                'sParentQuestionId': 'suspect',
+                'sParentAnswer': 'Yes;No',
+                'lstOptions': [
+                  {'value': "I'm not sure"},
+                ],
+              },
+              {
+                'sQuestionId': 'selection',
+                'sFieldtoUpdate': 'Illegally_Dumped_Pickup_Options__c',
+                'sQuestionType': 'MultiPicklist',
+                'sParentQuestionId': 'family',
+                'sParentAnswer': "I'm not sure",
+                'lstOptions': [
+                  {'value': 'Loose/Miscellaneous Debris'},
+                ],
+              },
+              {
+                'sQuestionId': 'placement',
+                'sFieldtoUpdate': 'Location_of_Loose_Miscellaneous_Debris__c',
+                'sQuestionType': 'Picklist',
+                'sParentQuestionId': 'selection',
+                'sParentAnswer': 'Loose/Miscellaneous Debris',
+                'lstOptions': [
+                  {'value': 'Curb'},
+                  {'value': 'Alley'},
+                ],
+              },
+              {
+                'sQuestionId': 'quantity',
+                'sFieldtoUpdate': 'No_of_Loose_Miscellaneous_Debris__c',
+                'sQuestionType': 'NumberIncrement',
+                'sParentQuestionId': 'selection',
+                'sParentAnswer': 'Loose/Miscellaneous Debris',
+              },
+              {
+                'sQuestionId': 'description',
+                'sFieldtoUpdate': 'Description',
+                'sQuestionType': 'TextArea',
+                'sParentQuestionId': null,
+                'sParentAnswer': '',
+              },
+            ],
           },
           'contactWrapperResponse': <String, Object?>{},
         };
@@ -640,4 +760,15 @@ class _LookupFactory extends gc.GeocodingPlatformFactory {
 
   @override
   gc.Geocoding createGeocoding(gc.GeocodingCreationParams params) => lookup;
+}
+
+Future<void> _waitFor(WidgetTester tester, bool Function() ready) async {
+  await tester.runAsync(() async {
+    for (var turn = 0; turn < 10000 && !ready(); turn++) {
+      await Future<void>(() {});
+      await tester.pump();
+    }
+  });
+  expect(ready(), isTrue);
+  await tester.pumpAndSettle();
 }

@@ -76,7 +76,7 @@ void main() {
 
         expect(tester.getRect(face), restingFace);
         expect(tester.getTopLeft(find.text('Start a report')), restingLabel);
-        expect(find.text('Report illegal dumping.'), findsOneWidget);
+        expect(find.text('Report a problem.'), findsOneWidget);
       }
       {
         var actions = 0;
@@ -161,4 +161,49 @@ void main() {
       }
     },
   );
+  testWidgets('custom shadow color keeps raised press feedback', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ReportsStyle.theme,
+        home: Scaffold(
+          body: OutlinedButton(
+            style: ReportsStyle.raisedButtonStyle(
+              backgroundColor: Colors.white,
+              shadowColor: ReportsStyle.border,
+            ),
+            onPressed: () {},
+            child: const Text('Choice'),
+          ),
+        ),
+      ),
+    );
+    final button = find.widgetWithText(OutlinedButton, 'Choice');
+    final face = find.descendant(
+      of: button,
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is DecoratedBox &&
+            widget.decoration is BoxDecoration &&
+            (widget.decoration as BoxDecoration).color == Colors.white,
+      ),
+    );
+    final resting = tester.getRect(face);
+    BoxShadow shadow() =>
+        (tester.widget<DecoratedBox>(face).decoration as BoxDecoration)
+            .boxShadow!
+            .single;
+    expect(shadow().color, ReportsStyle.border);
+    expect(shadow().offset, const Offset(0, 4));
+    final gesture = await tester.startGesture(tester.getCenter(button));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.getRect(face).top, resting.top + 3);
+    expect(shadow().color, ReportsStyle.border);
+    expect(shadow().offset, const Offset(0, 1));
+    await gesture.cancel();
+    await tester.pumpAndSettle();
+    expect(tester.getRect(face), resting);
+  });
 }

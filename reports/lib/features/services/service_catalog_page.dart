@@ -81,6 +81,11 @@ class _ServiceCatalogPageState extends State<ServiceCatalogPage> {
               ),
             if (_group != null)
               Text(_group!, style: Theme.of(context).textTheme.headlineMedium),
+            if (_group == null)
+              Text(
+                'Services',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
             Text(
               _group == null
                   ? 'Find the right place to start. Browse by category or search by name.'

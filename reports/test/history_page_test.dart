@@ -63,7 +63,13 @@ void main() {
   ) async {
     await _openHistory(tester);
 
-    expect(find.text('Your reports'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('Your reports'),
+      ),
+      findsOneWidget,
+    );
     expect(
       find.text('Reports you save on this device will appear here.'),
       findsOneWidget,
