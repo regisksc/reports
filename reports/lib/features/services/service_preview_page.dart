@@ -329,6 +329,8 @@ class _ServicePreviewPageState extends State<ServicePreviewPage> {
       ],
       if (step == 5) ...[
         const Text('Local receipt'),
+        const Text('Local lookup ID'),
+        Text(id),
         const Text('This preview was not sent to the City.'),
         Text(title),
       ],
